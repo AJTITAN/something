@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engineering Journey — 3 Month Training OS</title>
+<style>
+:root{
+  /* calm, low-contrast palette: nothing is pure white or pure black */
+  --bg:#191a1d; --bg2:#1e1f23; --surf:#232428; --surf2:#292a2f; --line:#2c2e33; --line2:#3a3c43;
+  --ink:#cfd0d4; --ink2:#a9abb1; --mut:#84868d; --dim:#63656b;
+  --acc:#7ea6c4;
+  --js:#c9a96a; --ts:#7ea6c4; --react:#6fb2b5; --next:#9aa0a8; --node:#84b58e;
+  --sql:#8b9bc9; --prod:#c09277; --ai:#a08fc0; --proj:#c58a7c; --iv:#c4869a; --rev:#8fb59c; --game:#7fb8ac;
+  --ok:#84b58e; --warn:#c9a96a; --bad:#c4869a; --hol:#63656b;
+  --f:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --fm:"SFMono-Regular",Consolas,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#33353b;border-radius:6px}
+::-webkit-scrollbar-track{background:transparent}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.wrap{max-width:1320px;margin:0 auto;padding:22px 20px 70px}
+.topbar{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:20px}
+.brand h1{font-size:19px;line-height:1.2;margin:0 0 2px;font-weight:600;letter-spacing:-.01em}
+.brand p{margin:0;color:var(--mut);font-size:13px}
+.countdown{display:flex;align-items:baseline;gap:7px;margin-left:auto;color:var(--ink2)}
+.countdown .num{font-size:26px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.countdown .lab{color:var(--mut);font-size:12.5px}
+
+.toolbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.btn{border:1px solid var(--line);background:transparent;padding:6px 11px;border-radius:7px;color:var(--ink2);font-size:13px}
+.btn:hover{background:var(--surf2);color:var(--ink)}
+.btn.primary{background:var(--surf2);color:var(--ink)}
+.btn.ghost{background:transparent}
+.btn.on{border-color:var(--acc);color:var(--acc)}
+.seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{padding:6px 12px;font-size:13px;color:var(--mut)}
+.seg button.on{background:var(--surf2);color:var(--ink)}
+.grow{flex:1}
+.search{background:transparent;border:1px solid var(--line);border-radius:7px;padding:6px 10px;min-width:190px;color:var(--ink2)}
+.search::placeholder{color:var(--dim)}
+select.search{min-width:auto}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:20px}
+.stat{background:var(--bg2);padding:12px 14px}
+.stat .k{color:var(--mut);font-size:12px;margin-bottom:4px}
+.stat .v{font-size:18px;font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--ink)}
+.stat .sub{color:var(--dim);font-size:11.5px;margin-top:2px}
+.bar{height:3px;border-radius:2px;background:var(--line2);overflow:hidden;margin-top:8px;opacity:.75}
+.bar i{display:block;height:100%;background:var(--acc)}
+
+.cols{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start}
+@media(max-width:1080px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:15px}
+.panel h2{font-size:13.5px;margin:0 0 12px;font-weight:600;color:var(--ink2)}
+
+.calhead{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.calhead .t{font-size:15px;font-weight:600}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:5px}
+.dow span{color:var(--dim);font-size:11px;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cell{background:var(--surf);border:1px solid transparent;border-radius:7px;min-height:96px;padding:7px;display:flex;flex-direction:column;gap:3px;text-align:left;overflow:hidden}
+.cell:hover{border-color:var(--line2)}
+.cell.out{opacity:.3}
+.cell.today{border-color:var(--acc)}
+.cell.hol{background:var(--bg2)}
+.cell.sel{border-color:var(--line2);background:var(--surf2)}
+.cell .d{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+.cell .d b{color:var(--ink2);font-weight:600;font-size:12.5px}
+.pill{font-size:10.5px;color:var(--dim)}
+.chip{font-size:11px;padding:2px 0 2px 8px;border-left:2px solid var(--mut);color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip.done{opacity:.4}
+.cell .more{font-size:10.5px;color:var(--dim);padding-left:8px}
+.load{height:2px;border-radius:1px;background:var(--line);margin-top:auto}
+.load i{display:block;height:100%;background:var(--line2)}
+.load.over i{background:var(--bad)}
+
+.weekview{display:flex;flex-direction:column;gap:7px}
+.wday{background:var(--surf);border:1px solid var(--line);border-radius:9px;padding:12px}
+.wday.today{border-color:var(--acc)}
+.wday.hol{background:var(--bg2)}
+.wday header{display:flex;align-items:baseline;gap:9px;margin-bottom:8px}
+.wday header b{font-size:13.5px;font-weight:600}
+.wday header span{color:var(--mut);font-size:12px}
+.tasks{display:flex;flex-direction:column;gap:5px}
+.task{display:flex;gap:10px;align-items:flex-start;border-left:2px solid var(--mut);padding:6px 0 6px 10px}
+.task:hover{background:var(--surf2)}
+.task.done{opacity:.45}
+.task .tt{font-size:13px;color:var(--ink)}
+.task .meta{color:var(--dim);font-size:11.5px;margin-top:1px}
+.task .meta b{color:var(--mut);font-weight:400}
+.cb{width:16px;height:16px;border-radius:4px;border:1px solid var(--line2);flex:none;margin-top:2px;display:grid;place-items:center;color:transparent;font-size:10px}
+.cb:hover{border-color:var(--mut)}
+.cb.on{background:var(--ok);border-color:var(--ok);color:#1b2620}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto;align-items:center}
+.tag{font-size:10.5px;padding:1px 6px;border-radius:4px;color:var(--mut);border:1px solid var(--line)}
+.tag.crit{color:var(--bad)}
+.tag.high{color:var(--warn)}
+.tag.bk{color:var(--proj)}
+
+.scrim{position:fixed;inset:0;background:rgba(10,10,12,.5);z-index:40;opacity:0;pointer-events:none;transition:opacity .15s}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(540px,100%);background:var(--bg2);border-left:1px solid var(--line);z-index:50;transform:translateX(102%);transition:transform .18s ease;display:flex;flex-direction:column}
+.drawer.on{transform:none}
+.dhead{padding:15px 18px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:12px}
+.dhead h2{margin:0;font-size:16px;font-weight:600}
+.dhead p{margin:2px 0 0;color:var(--mut);font-size:12.5px}
+.dbody{padding:15px 18px 40px;overflow-y:auto;flex:1}
+.x{margin-left:auto;color:var(--mut);font-size:19px;line-height:1;padding:0 6px}
+.x:hover{color:var(--ink)}
+.row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px}
+.detail{border:1px solid var(--line);border-left:2px solid var(--mut);border-radius:8px;padding:12px;margin-bottom:10px}
+.detail .dt{display:flex;gap:10px;align-items:flex-start}
+.detail h4{margin:0;font-size:14px;font-weight:600}
+.detail .meta{color:var(--dim);font-size:11.5px;margin-top:2px}
+.qa{margin-top:9px;display:grid;gap:7px}
+.qa div{font-size:12.5px;color:var(--ink2);line-height:1.6}
+.qa em{color:var(--mut);font-style:normal;margin-right:6px}
+.hist{font-size:11.5px;color:var(--dim);margin-top:9px;padding-top:7px;border-top:1px solid var(--line)}
+textarea{width:100%;background:var(--surf);border:1px solid var(--line);border-radius:7px;padding:8px;min-height:58px;resize:vertical;color:var(--ink2)}
+.note-lbl{font-size:12px;color:var(--mut);margin:8px 0 5px}
+code,.mono{font-family:var(--fm);font-size:12px}
+
+.pbar{margin-bottom:8px}
+.pbar .l{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px;color:var(--ink2)}
+.pbar .l span:last-child{color:var(--dim);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:11px}
+.legend i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:5px;vertical-align:0}
+.legend span{font-size:11px;color:var(--dim)}
+.proj{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+.proj:first-child{border-top:none;padding-top:0;margin-top:0}
+.proj h4{margin:0 0 2px;font-size:13.5px;font-weight:600}
+.proj .tag2{font-size:11.5px;color:var(--dim);margin-bottom:7px;line-height:1.45}
+.proj p{margin:0 0 9px;font-size:12.5px;color:var(--ink2)}
+details summary{cursor:pointer;font-size:12.5px;color:var(--acc);margin-top:7px;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details summary:before{content:'+ ';color:var(--dim)}
+details[open] summary:before{content:'– '}
+details .inner{font-size:12.5px;color:var(--ink2);margin-top:7px;line-height:1.65}
+details .inner b{color:var(--ink)}
+.tl{list-style:none;padding:0;margin:7px 0 0}
+.tl li{font-size:12px;color:var(--ink2);padding:4px 0 4px 12px;border-left:1px solid var(--line2);margin-left:2px;cursor:pointer}
+.tl li:hover{color:var(--ink)}
+.tl li b{font-weight:500}
+.tl li.done{color:var(--dim);border-color:var(--ok)}
+.review{border:1px solid var(--line);border-radius:8px;padding:12px;color:var(--ink2)}
+.review b{color:var(--ink);font-weight:600}
+.review ul{margin:6px 0 0;padding-left:17px}
+.review li{font-size:12.5px;margin-bottom:2px}
+.empty{color:var(--dim);font-size:12.5px;padding:8px 0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(10px);background:var(--surf2);border:1px solid var(--line2);color:var(--ink2);padding:9px 15px;border-radius:8px;z-index:70;opacity:0;pointer-events:none;transition:opacity .15s,transform .15s;font-size:12.5px}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.hint{color:var(--dim);font-size:11.5px;margin-top:10px;line-height:1.5}
+@media(max-width:640px){
+  .wrap{padding:14px 12px 50px}
+  .countdown{margin-left:0}
+  .cell{min-height:62px}.cell .chip,.cell .more,.cell .load{display:none}
+  .grid{gap:4px}
+}
+
+/* lock screen + sync */
+.gate{position:fixed;inset:0;background:var(--bg);z-index:90;display:grid;place-items:center;padding:20px}
+.gate.off{display:none}
+.gatebox{width:100%;max-width:320px;text-align:left}
+.gatebox h2{font-size:16px;margin:0 0 4px;font-weight:600}
+.gatebox p{color:var(--mut);font-size:12.5px;margin:0 0 16px;line-height:1.55}
+.gatebox input{width:100%;background:var(--surf);border:1px solid var(--line);border-radius:7px;padding:10px 12px;letter-spacing:.35em;font-size:16px;text-align:center;color:var(--ink)}
+.gatebox input.bad{border-color:var(--bad)}
+.gatebox button{width:100%;margin-top:9px;padding:10px;border:1px solid var(--line);border-radius:7px;color:var(--ink2);background:var(--surf)}
+.gatebox button:hover{background:var(--surf2);color:var(--ink)}
+.gatebox .err{color:var(--bad);font-size:12px;margin-top:8px;min-height:16px}
+.syncdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--dim);margin-right:6px;vertical-align:1px}
+.syncdot.ok{background:var(--ok)}.syncdot.busy{background:var(--warn)}.syncdot.err{background:var(--bad)}
+#btnSync{font-variant-numeric:tabular-nums}
+.setup label{display:block;font-size:12.5px;color:var(--ink2);margin:12px 0 5px}
+.setup input{width:100%;background:var(--surf);border:1px solid var(--line);border-radius:7px;padding:8px 10px;color:var(--ink2)}
+.setup code{background:var(--surf);padding:1px 5px;border-radius:4px;color:var(--ink2)}
+</style>
+</head>
+<body>
+<div class="gate" id="gate">
+  <div class="gatebox">
+    <h2>Engineering Journey</h2>
+    <p>Enter your code to open the plan.</p>
+    <input id="pw" type="password" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="••••">
+    <button id="pwGo">Unlock</button>
+    <div class="err" id="pwErr"></div>
+  </div>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <div class="topbar">
+    <div class="brand">
+      <h1>Engineering Journey</h1>
+      <p id="phaseLine">Loading plan…</p>
+    </div>
+    <div class="countdown">
+      <span class="num" id="cdNum">–</span>
+      <span class="lab" id="cdLab">days left in the 12-week plan</span>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="toolbar">
+    <div class="seg" id="viewSeg">
+      <button data-view="month" class="on">Month</button>
+      <button data-view="week">Week</button>
+    </div>
+    <button class="btn" id="btnToday">Today</button>
+    <button class="btn" id="btnPrev">←</button>
+    <button class="btn" id="btnNext">→</button>
+    <input class="search" id="q" placeholder="Search topics, e.g. closures, N+1, RAG">
+    <select class="search" id="filterCat"><option value="">All categories</option></select>
+    <select class="search" id="filterKind">
+      <option value="">All types</option>
+      <option value="coding">Coding</option><option value="theory">Theory</option>
+      <option value="interview">Interview</option><option value="ai">AI</option>
+      <option value="project">Project</option><option value="revision">Revision</option>
+    </select>
+    <select class="search" id="filterStatus">
+      <option value="">Any status</option><option value="planned">Planned</option>
+      <option value="inprogress">In progress</option><option value="completed">Completed</option>
+      <option value="backlog">Backlog</option>
+    </select>
+    <span class="grow"></span>
+    <button class="btn" id="btnSync"><span class="syncdot" id="syncDot"></span><span id="syncTxt">Sync</span></button>
+    <button class="btn" id="btnReview">Weekly review</button>
+    <button class="btn" id="btnExport">Export</button>
+    <button class="btn" id="btnImport">Import</button>
+    <button class="btn" id="btnReset">Reset plan</button>
+    <input type="file" id="fileIn" accept="application/json" style="display:none">
+  </div>
+
+  <div class="cols">
+    <div>
+      <div class="panel">
+        <div class="calhead">
+          <span class="t" id="calTitle"></span>
+          <span class="pill" id="calPill"></span>
+          <span class="grow"></span>
+          <span class="pill" id="calLoad"></span>
+        </div>
+        <div id="calArea"></div>
+        <div class="legend" id="legend"></div>
+        <p class="hint">Click any day to open it. Inside a day you can complete tasks, push them to backlog, mark the whole day a holiday, or add notes — the rest of the 12 weeks reflows around your change.</p>
+      </div>
+
+      <div class="panel" style="margin-top:20px" id="searchPanel" hidden>
+        <h2>Search results</h2>
+        <div id="searchOut"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <h2>Skill scores</h2>
+        <div id="scores"></div>
+        <p class="hint">Scores rise with completed weighted work and drop 4 points for every topic you flag as shaky in a task's detail view.</p>
+      </div>
+
+      <div class="panel" style="margin-top:20px">
+        <h2>Portfolio projects</h2>
+        <div id="projects"></div>
+      </div>
+
+      <div class="panel" style="margin-top:20px">
+        <h2>Backlog queue</h2>
+        <div id="backlog"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+
+<div class="drawer" id="drawer">
+  <div class="dhead">
+    <div>
+      <h2 id="dTitle">Day</h2>
+      <p id="dSub"></p>
+    </div>
+    <button class="x" id="dClose">×</button>
+  </div>
+  <div class="dbody" id="dBody"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   Engineering Journey — 3-month training OS
+   Single file. No backend. State persists in localStorage
+   (falls back to in-memory if storage is blocked).
+   ============================================================ */
+const PLAN_DAYS = 84;        // 12 weeks
+const HORIZON   = 170;       // scheduling horizon incl. overflow
+const CAP = [90,120,120,120,120,120,150]; // Sun..Sat daily study minutes
+const REV_OFFSETS = [3,7,21,45];
+const REV_MIN     = [15,20,25,30];
+const REV_LABEL   = ['Recall pass','Practice problem','Interview drill','Advanced application'];
+
+const CATS = ["JavaScript","TypeScript","React","Next.js","Node.js","Express","SQL","PostgreSQL","Prisma","Git","Docker","DevOps","System Design","AI","LLMs","RAG","Projects","Interview"];
+const CATCOLOR = {JavaScript:'--js',TypeScript:'--ts',React:'--react','Next.js':'--next','Node.js':'--node',Express:'--node',SQL:'--sql',PostgreSQL:'--sql',Prisma:'--sql',Git:'--prod',Docker:'--prod',DevOps:'--prod','System Design':'--iv',AI:'--ai',LLMs:'--ai',RAG:'--ai',Projects:'--proj',Interview:'--iv',Revision:'--rev',Valorant:'--game'};
+const KINDLABEL = {coding:'Coding',theory:'Theory',interview:'Interview',ai:'AI',project:'Project',revision:'Revision'};
+const PHASES = [
+  {n:1,name:'Fundamentals — JavaScript, TypeScript, React, Next.js',from:0,to:34},
+  {n:2,name:'Backend, data and production engineering',from:35,to:62},
+  {n:3,name:'AI / LLM engineering and interview conversion',from:63,to:83}
+];
+
+/* ---------- curriculum builder ---------- */
+const C = [];
+function T(id,title,cat,kind,min,pri,diff,prereq,iw,d){
+  const p = d.split('|');
+  C.push({id,title,cat,kind,min,pri,diff,iw,prereq:prereq?prereq.split(','):[],
+    what:p[0],why:p[1],how:p[2],practice:p[3],interview:p[4]});
+}
+
+/* ============ WEEK 1 — JavaScript foundations ============ */
+T('js-scope','Scope, hoisting and the temporal dead zone','JavaScript','coding',60,'critical',2,'',7,
+"Map how var/let/const are created, initialised and resolved through the scope chain, and why a let read before its declaration throws while a var read returns undefined.|Almost every confusing JS bug (loops capturing wrong values, undefined imports, shadowed variables) is a scope-chain question in disguise, and interviewers open with it because it separates memorised syntax from a real mental model.|Draft the execution context by hand for a nested function, then verify with a debugger: set breakpoints and read the Scope pane in Chrome DevTools instead of console.log.|Write a for loop with var and one with let inside setTimeout; predict both outputs, then rewrite the var version with an IIFE so it behaves like let.|Expect: 'what prints and why' output questions, and 'explain the TDZ' as a warm-up before harder closure questions.");
+T('js-closures','Closures and the module pattern','JavaScript','coding',60,'critical',3,'js-scope',9,
+"A closure is a function plus the variable environment it was created in; study how that environment stays alive after the outer function returns.|Closures underpin hooks, memoisation, event handlers, private state, currying and rate limiters — you cannot reason about React state or middleware factories without them.|Build three utilities from scratch: once(fn), memoize(fn) and a counter factory with private state, and inspect the Closure entry in DevTools for each.|Implement your own debounce and throttle, including a cancel() method and correct this/arguments forwarding.|Extremely common: 'implement debounce', 'what does this counter print', 'how would you make a private variable in JS'.");
+T('js-this','`this`, call/apply/bind and arrow functions','JavaScript','coding',60,'high',3,'js-scope',8,
+"Learn the four binding rules (default, implicit, explicit, new) and why arrow functions have no own this but inherit it lexically.|Losing this when passing a method as a callback is a classic production bug, and interviewers use it to test whether you understand functions as values.|Write one object with a method used five ways: direct call, detached callback, arrow, bind, and inside setTimeout — log this in each.|Implement your own bind() polyfill supporting partial application and correct behaviour with new.|Expect 'implement Function.prototype.bind' and output questions mixing arrow functions with object methods.");
+T('js-proto','Prototypes, the prototype chain and classes','JavaScript','theory',60,'high',3,'js-this',7,
+"Follow property lookup through __proto__, see how class is sugar over prototypes, and how extends/super wires the chain.|Understanding the chain explains instanceof, method overriding, why adding to Array.prototype is dangerous, and how libraries do inheritance.|Recreate a small class hierarchy twice — once with function constructors and Object.create, once with class — and diff the resulting objects in the console.|Write your own instanceof(obj, Ctor) using getPrototypeOf, and a mixin helper that copies behaviour onto a prototype.|Asked as 'how does inheritance work in JS' and 'what is the difference between __proto__ and prototype'.");
+T('js-objects','Objects, references and equality','JavaScript','coding',45,'critical',2,'',7,
+"Nail the difference between value copies and reference copies, how equality compares references, and how objects behave as function arguments.|Nearly every 'my React state didn't update' or 'my array mutated somewhere else' bug traces back to shared references.|Take a nested config object, pass it into a function that mutates it, and observe every place the change surfaces; then repeat with a copy.|Write a pure updateIn(obj, path, value) that returns a new object without mutating any level of nesting.|Feeds directly into React immutability questions and 'why does my useEffect fire every render' (a new object literal in deps).");
+T('js-copy','Shallow copy, deep copy and structuredClone','JavaScript','coding',45,'high',2,'js-objects',6,
+"Compare spread/Object.assign, JSON round-trip, structuredClone and a hand-written recursive clone, including their failure cases.|Choosing the wrong copy strategy silently loses Dates, Maps, undefined values and functions, or blows the stack on cyclic data.|Build a test object containing a Date, a Map, undefined, NaN, a function and a cycle, then run all four strategies and record what each one destroys.|Write deepClone() with a WeakMap to handle cycles and preserve Date/Map/Set.|'How would you deep clone an object' plus the follow-up 'what breaks with JSON.parse(JSON.stringify(x))'.");
+T('js-hof','Higher-order functions and functional composition','JavaScript','coding',60,'high',2,'js-closures',6,
+"Treat functions as data: map/filter/reduce internals, currying, partial application and pipe/compose.|Clean data transformation is a daily backend and frontend skill, and reduce shows up in interviews as a way to test abstraction ability.|Reimplement map, filter and reduce on Array.prototype yourself, then rebuild groupBy, chunk and uniqBy using only reduce.|Write pipe(...fns) and compose(...fns), then use them to build a small request-transformation pipeline.|'Implement reduce', 'implement groupBy', 'flatten a nested array without flat()'.");
+T('js-memory','Memory model, garbage collection and leaks','JavaScript','theory',45,'med',3,'js-closures',5,
+"Understand reachability-based GC, what keeps an object alive, and the four common leak sources: detached DOM nodes, forgotten timers, global caches and lingering listeners.|Long-running Node processes and SPA sessions die from leaks, and 'our memory grows over time' is a real 3-5 YOE debugging question.|Take heap snapshots in DevTools before and after mounting/unmounting a component that forgets to clear an interval, then compare retained size.|Build a cache that leaks, prove it in a snapshot, then fix it with WeakMap and explicit cleanup.|'How would you find a memory leak in production' — answer with tooling and hypotheses, not guesses.");
+T('iv-w1','Interview set 1 — JavaScript output and fundamentals','Interview','interview',60,'high',2,'js-closures,js-this',9,
+"Timed drill: 12 output-prediction questions on hoisting, closures in loops, this binding, coercion and object references.|Interviews are a separate skill from coding; you need to narrate your reasoning out loud while under mild pressure.|Set a 45-minute timer, write your predicted output for each question before running any code, then run them and write one line explaining every miss.|Record yourself explaining three answers aloud in under 90 seconds each — that is roughly the pace a real screen demands.|This is the standard first-round filter for frontend and full-stack roles at every level.");
+T('js-week1-consolidate','Week 1 consolidation and cheat sheet','JavaScript','revision',45,'med',2,'js-memory',5,
+"Compress the week into one page: scope chain, closure, this rules, prototype lookup, reference semantics, copy strategies.|Writing your own reference is the highest-retention form of revision and becomes your pre-interview warm-up sheet in week 12.|For each concept write a two-line definition plus one gotcha and one code snippet — no copy-paste from docs.|Re-solve the two hardest problems from this week from a blank file, no notes.|A personal cheat sheet gives you crisp, consistent phrasing when you are asked the same question for the tenth time.");
+
+/* ============ WEEK 2 — async JavaScript + Project 1 kickoff ============ */
+T('js-eventloop','The event loop, call stack and task queues','JavaScript','theory',60,'critical',3,'js-closures',10,
+"Model the runtime: call stack, Web/Node APIs, macrotask queue, microtask queue and the rule that microtasks drain fully between macrotasks.|This single model explains async ordering, UI jank, starved renders and setTimeout(0) behaviour — it is the most-asked deep JS topic.|Draw the loop on paper, then verify with a script mixing sync logs, setTimeout, Promise.then, queueMicrotask and (in Node) process.nextTick.|Predict the exact output order of a 10-line async snippet, then explain why an infinite microtask chain freezes the page while a setTimeout chain does not.|Guaranteed at mid level: 'order the output', 'difference between microtask and macrotask', 'why is setTimeout not exact'.");
+T('js-promises','Promises: states, chaining and combinators','JavaScript','coding',60,'critical',3,'js-eventloop',9,
+"States and transitions, then/catch/finally chaining, value vs promise returns, and all/allSettled/race/any semantics.|Promises are the vocabulary of every API call, queue worker and parallel fetch; combinator choice decides whether one slow call blocks a whole page.|Write a fetch fan-out with Promise.all, break one call, then move to allSettled and compare the error surface.|Implement a minimal Promise class with then chaining, and a promisePool(tasks, limit) that runs at most N concurrently.|'Implement Promise.all', 'implement a concurrency limiter', 'all vs allSettled' are staple mid-level questions.");
+T('js-async-await','async/await, sequential vs parallel execution','JavaScript','coding',60,'critical',2,'js-promises',9,
+"See await as syntax over then, learn where execution suspends, and spot the accidental serial await inside loops.|Awaiting inside a for loop is the most common real performance bug in Node services — turning 200ms into 4 seconds.|Time a loop of 10 awaited calls, then rewrite with Promise.all and measure again; repeat with a concurrency cap.|Write fetchAllUsers() three ways — serial, fully parallel, pooled — and write down when each is correct.|'Why is this endpoint slow' debugging prompts, plus 'rewrite this to run in parallel'.");
+T('js-errors','Error handling, custom errors and async failure paths','JavaScript','coding',60,'high',3,'js-async-await',8,
+"try/catch with await, unhandled rejections, custom Error subclasses, error causes, and why throwing non-Errors loses stack traces.|Production reliability is mostly error taxonomy: knowing which failures are retryable, which are user-facing and which should page someone.|Build an AppError base class with statusCode and isOperational, then wrap a flaky async call with retry plus exponential backoff and jitter.|Write withRetry(fn, {retries, backoff}) that only retries retryable errors and gives up cleanly, preserving the original stack.|'How do you handle errors in async code', 'what happens to an unhandled rejection in Node' — 3-5 YOE territory.");
+T('js-iterators','Iterators, generators and async iteration','JavaScript','coding',45,'med',3,'js-promises',5,
+"Symbol.iterator, generator functions, lazy evaluation, and for await...of over streams.|Streaming LLM responses, paginated API cursors and large file processing are all async iteration problems you will hit in Phase 3.|Write a generator that yields paginated API results and a for await consumer that stops early, then check that the underlying request is cancelled.|Build a takeUntil(asyncIterable, predicate) helper and use it against a mock streaming response.|Comes up when discussing streaming responses and memory-safe processing of large datasets.");
+T('p1-arch','Palimpsest — problem framing and architecture','Projects','project',90,'high',3,'js-async-await',9,
+"Write the one-page brief for Project 1: the problem, two user personas, the core loop, and a C4-style container diagram (Next.js app, Node worker, Postgres+pgvector, Redis, object storage).|A project you can defend architecturally is worth more in interviews than three projects you can only demo; the brief is what you will talk from.|Draft it in the repo README: problem statement, non-goals, personas, container diagram (Mermaid), and the three riskiest technical unknowns.|Write the 90-second pitch and the 5-minute deep dive as separate sections; read both aloud and cut anything you cannot defend.|Every interview ends with 'tell me about a project' — this document is the source of that answer.");
+T('iv-w2','Interview set 2 — async ordering and promise internals','Interview','interview',60,'high',3,'js-eventloop,js-promises',9,
+"Output-ordering drills plus one live implementation: Promise.allSettled from scratch.|You must be fast and calm on event-loop ordering; hesitation here reads as shaky fundamentals no matter how good your projects are.|Timed 45 minutes: 8 ordering questions, then implement allSettled without looking anything up, then explain your solution aloud.|Explain to an imaginary interviewer why a microtask starves rendering, using a concrete example.|Directly mirrors round-one frontend screens at product companies.");
+T('js-week2-consolidate','Async consolidation — write the model down','JavaScript','revision',45,'med',2,'js-errors',6,
+"Produce one diagram and one page covering stack, queues, promise states, await suspension points and error propagation.|If you can draw the event loop from memory in 60 seconds, you can answer any variation of the question.|Redraw the loop from a blank page, then annotate where await, then, setTimeout and I/O callbacks enter it.|Re-solve the concurrency limiter without notes and compare against your earlier version.|Whiteboard-drawing the runtime is a strong differentiator at mid level.");
+
+/* ============ WEEK 3 — TypeScript + Project 1 data model ============ */
+T('ts-basics','TypeScript foundations: inference over annotation','TypeScript','coding',60,'high',2,'js-objects',7,
+"Structural typing, inference, literal vs widened types, readonly, and when an explicit annotation actually helps.|Over-annotated code is a junior tell; strong TS leans on inference and annotates boundaries only.|Convert one of your week-1 utility files to TS with strict mode on and remove every annotation the compiler can infer.|Type memoize() so the returned function keeps the original signature exactly.|'When would you annotate vs infer' and 'what is structural typing' show TS maturity fast.");
+T('ts-shapes','Interfaces, type aliases, unions and intersections','TypeScript','coding',60,'high',2,'ts-basics',7,
+"Interface vs type alias tradeoffs, declaration merging, discriminated unions, intersections and why unions model domain states better than optional flags.|Discriminated unions eliminate whole classes of impossible states — the single highest-value TS pattern for API and UI state.|Model a request state as a union (idle | loading | success | error) instead of three booleans, and refactor a component to consume it.|Type an API response union so that accessing data is only possible after narrowing to success.|'How would you type this API response' is a standard mid-level TS question.");
+T('ts-narrowing','Type narrowing, guards and `unknown` vs `any`','TypeScript','coding',60,'high',3,'ts-shapes',8,
+"typeof/in/instanceof narrowing, custom type predicates, exhaustive switch with never, and why unknown is the safe boundary type.|Data from network, JSON.parse and LLM output is untrusted; unknown plus a validator is how you keep type safety honest.|Write isUser(x): x is User by hand, then replace it with a zod schema and compare the error messages.|Add an assertNever(x: never) to a switch and prove the compiler catches a newly added union member.|'Difference between any and unknown' is a fast credibility check; exhaustiveness is the follow-up.");
+T('ts-generics','Generics, constraints and conditional types','TypeScript','coding',60,'high',4,'ts-narrowing',8,
+"Type parameters, extends constraints, keyof/typeof, indexed access, mapped types, conditional types and infer.|Generic helpers are how you write library-grade code; interviewers use them to separate TS users from TS engineers.|Build a typed pick(obj, keys), a DeepPartial<T> and an ApiResult<T> wrapper, testing each against wrong inputs.|Write a typed event emitter where on('user:created', cb) infers the exact payload type from a map.|'Write a generic that…' is a common live-coding task for senior frontend roles.");
+T('ts-utility','Utility types and end-to-end typed API layer','TypeScript','coding',60,'high',3,'ts-generics',7,
+"Partial, Required, Pick, Omit, Record, ReturnType, Awaited, satisfies — and how to share types across client and server.|A typed client-server contract removes an entire category of bugs and is exactly the kind of engineering decision interviewers probe.|Define request/response types once, derive client function signatures from them, and validate at runtime with zod inferring the same type.|Build a typed fetch wrapper: apiGet<'/users/:id'>() infers params and the response shape from a route map.|'How do you keep frontend and backend types in sync' — great answer material for full-stack roles.");
+T('p1-schema','Palimpsest — Postgres schema and access patterns','Projects','project',90,'high',3,'p1-arch,ts-shapes',8,
+"Design the relational model: workspaces, sources, documents, chunks (with vector column), decisions, decision_links, users, memberships, audit_log — driven by the queries you must serve.|Schema-first thinking (queries then tables, not tables then queries) is a hallmark of engineers with real production experience.|Write the ERD, then write the five hottest queries in raw SQL before touching an ORM, and note which indexes each needs.|List every access pattern with expected cardinality, then justify each index; decide the pgvector index type and why.|'Walk me through your schema' — you want to answer with access patterns and tradeoffs, not table names.");
+T('iv-w3','Interview set 3 — TypeScript and data modelling','Interview','interview',60,'high',3,'ts-generics',8,
+"Half TS (generics, narrowing, unknown), half modelling: design types for a multi-tenant document system.|Combining type design with domain modelling is exactly what mid-level full-stack interviews test.|45-minute timed set; write the types in an editor with strict mode and let the compiler grade you.|Explain aloud why you chose a discriminated union over optional fields in your model.|Mirrors the take-home-style discussions used for 3-5 YOE screening.");
+
+/* ============ WEEK 4 — React core ============ */
+T('react-render','The React rendering model: render, commit, reconcile','React','theory',60,'critical',3,'js-objects',9,
+"What triggers a render, what render actually produces, how reconciliation diffs elements, and why keys matter for list identity.|Most React performance and 'my input lost focus' bugs are reconciliation bugs; the mental model prevents cargo-cult fixes.|Use React DevTools Profiler on a list: reorder with index keys vs stable ids and watch component identity break.|Build a list where index keys cause a visible state bug, then fix it with stable ids and explain the difference.|'Why do you need keys' then 'what actually happens when state changes' — a two-step question at mid level.");
+T('react-state','State, snapshots and batching','React','coding',60,'critical',3,'react-render',10,
+"State is a snapshot per render: three setCount(count+1) calls in one handler produce one increment because count is frozen for that render.|This is the single most-asked React interview question and the root of dozens of real bugs.|Build a counter, click a button that calls setCount(count+1) three times, log the render count, then switch to the functional updater.|Write both versions side by side and explain queueing, batching in React 18 (including inside promises and timeouts), and when a value is stale.|Expect the exact question: 'why does this only increment by one'.");
+T('react-effects','useEffect: dependencies, cleanup and the effect lifecycle','React','coding',60,'critical',3,'react-state',9,
+"When effects run, how the dependency array is compared (Object.is on each item), cleanup semantics and StrictMode double-invocation in dev.|Effects are where junior code leaks subscriptions, double-fetches and loops; disciplined effects are a mid-level marker.|Write a subscription effect with correct cleanup, then deliberately omit the cleanup and observe duplicate listeners in the profiler.|Fix an infinite loop caused by an object literal in the dependency array, three ways: move it out, memoise it, or restructure state.|'Why does my effect run twice', 'what goes in the dependency array', 'how do you cancel an in-flight request'.");
+T('react-nofetch','Effects you should not write: derived state and data fetching','React','coding',45,'high',3,'react-effects',8,
+"Recognise the anti-patterns: syncing props to state, computing derived values in effects, and fetching without cancellation or caching.|Knowing when *not* to use an effect is what separates someone who read the docs from someone who has maintained a React codebase.|Take a component with three effects and remove two by computing during render and lifting state up.|Rewrite an effect-based fetch as a cancellable request with an AbortController, loading and error states.|'When should you not use useEffect' is a deliberate senior-flavoured probe.");
+T('react-perf','Re-renders, memo, useMemo and useCallback','React','coding',60,'high',3,'react-effects',8,
+"Why children re-render, what React.memo compares, when useMemo/useCallback pay for themselves and when they are noise.|Premature memoisation is as bad as none; being able to measure before optimising is the point.|Profile a slow list with the Profiler flamegraph, apply one targeted fix, and re-measure to prove the win.|Fix a case where React.memo does nothing because a new function prop is created every render.|'How do you optimise a slow React page' — answer with measurement first, then specific fixes.");
+T('react-context','Context, composition and state placement','React','coding',60,'high',3,'react-perf',7,
+"Context as dependency injection rather than a state manager, the re-render cost of a single large context, and splitting by change frequency.|Choosing where state lives is an architecture decision interviewers use to gauge design sense.|Build a theme+auth+cart context tree, measure re-renders, then split contexts and use composition (children as props) to cut them.|Refactor prop drilling into context, then show a case where composition would have been the better fix.|'Context vs Redux vs Zustand' — the strong answer is about change frequency and boundaries.");
+T('react-hooks','Custom hooks and reusable logic','React','coding',60,'high',3,'react-context',8,
+"Extract stateful logic into hooks with clean APIs; rules of hooks and why they exist; testing hooks in isolation.|Custom hooks are the main reuse mechanism in modern React and a natural live-coding exercise.|Write useLocalStorage, useDebouncedValue and useAsync (with cancel + error) and use all three in one small screen.|Build useIntersectionObserver and use it for infinite scroll with proper cleanup.|'Write a custom hook that…' is a very common 30-minute pairing task.");
+T('react-forms','Forms, controlled inputs and validation','React','coding',45,'med',2,'react-state',6,
+"Controlled vs uncontrolled inputs, validation timing, error surfacing, and shared client/server validation schemas.|Forms are where UX, typing and backend contracts meet — a realistic ground for full-stack questions.|Build a multi-field form with zod validation, field-level errors and a disabled-until-valid submit, reusing the server's schema.|Add optimistic submit with rollback on failure and a duplicate-submit guard.|'How would you handle validation on both sides' pairs with your TS API-layer answer.");
+T('iv-w4','Interview set 4 — React deep dive','Interview','interview',60,'high',3,'react-perf,react-hooks',9,
+"Batching, stale closures in effects, keys, memo semantics, plus one live task: build useDebouncedSearch from scratch.|Week 4 is the strong-junior checkpoint; you should now be able to explain React behaviour causally, not descriptively.|Timed 50 minutes, code in a blank file, explain each decision aloud as you type.|Answer 'why does this component re-render' for three different snippets in under two minutes each.|This set is close to a real second-round frontend interview.");
+T('react-week4-consolidate','React consolidation — cause-and-effect notes','React','revision',45,'med',2,'react-hooks',6,
+"One page linking each React symptom to its cause: extra renders, stale values, lost focus, duplicate requests, infinite loops.|Symptom-to-cause tables are how you debug fast under pressure and how you sound experienced when narrating.|Write the table from memory, then verify each row with a small reproduction.|Reproduce and fix two symptoms from the table without looking at your notes.|Debugging narration is a large part of the 3-5 YOE bar.");
+
+/* ============ WEEK 5 — Next.js + Project 2 kickoff ============ */
+T('next-approuter','App Router, routing and layouts','Next.js','coding',60,'high',2,'react-hooks',7,
+"File-system routing, nested layouts, route groups, dynamic segments, parallel and intercepting routes, and the special files (layout/page/loading/error/not-found).|Layout composition decides what re-renders and what stays mounted across navigation — a real performance lever, not just file organisation.|Build a dashboard with a persistent sidebar layout, a dynamic /projects/[id] route and a modal via an intercepting route.|Add a route group so marketing and app pages use different layouts without changing URLs.|'How does routing differ from React Router' and 'where would you put shared UI' show framework fluency.");
+T('next-rsc','Server Components vs Client Components','Next.js','theory',60,'critical',4,'next-approuter',9,
+"What runs where, what crosses the network boundary, serialisation rules for props, and why hooks and browser APIs force a client component.|The server/client boundary is the defining Next.js concept and the most common source of confusion in interviews and codebases.|Take a client-heavy page and push everything except the interactive leaf to the server; measure the JS bundle before and after.|Explain why passing a function as a prop from a server to a client component fails, and restructure using children.|'What is a Server Component and when would you use one' is now a standard mid-level question.");
+T('next-useclient','The \"use client\" boundary in practice','Next.js','coding',45,'high',3,'next-rsc',8,
+"How the directive marks an entry point into the client graph, how the boundary propagates to imports, and the composition patterns that keep it small.|Sprinkling 'use client' at the top of every file is the classic misuse and immediately signals surface-level knowledge.|Audit a page's client graph, move the directive down the tree, and pass server-rendered content through as children.|Reduce a page from a full client tree to three interactive islands, documenting the bundle-size delta.|Expect 'why is this whole page client-side' as a code-review-style question.");
+T('next-data','Server-side data fetching and caching','Next.js','coding',60,'high',3,'next-rsc',8,
+"Fetching in server components, request memoisation, the data cache, full route cache, revalidation (time-based and tag-based) and dynamic rendering triggers.|Caching is the biggest Next.js footgun in production; you need to explain why a page went stale or why it stopped being static.|Build one static page, one time-revalidated page and one dynamic page; inspect the build output to confirm which is which.|Implement tag-based revalidation so a mutation invalidates exactly the affected pages, then prove it in the network tab.|'How does caching work in the App Router' plus 'why is my page stale' — high-signal production questions.");
+T('next-actions','Server actions, mutations and loading states','Next.js','coding',60,'high',3,'next-data',7,
+"Server actions as RPC endpoints, progressive enhancement, useFormStatus/useOptimistic, and validating input on the server every time.|Mutations are where security and UX meet; treating an action as a public endpoint is the mindset interviewers want to hear.|Build a create-and-list flow with a server action, zod validation, optimistic UI and a rollback path on failure.|Add authorisation inside the action and prove that a crafted client request cannot bypass it.|'Are server actions secure' — the right answer is that they are public endpoints and need the same checks as any route.");
+T('next-errors','Loading, streaming and error boundaries','Next.js','coding',45,'med',3,'next-data',6,
+"loading.tsx and Suspense streaming, granular fallbacks, error.tsx boundaries with reset, and not-found handling.|Streaming turns a slow aggregate page into a fast first paint — a strong, measurable answer to 'how would you make this faster'.|Wrap three independent data regions in Suspense with skeletons and watch them stream in the network panel.|Force one region to fail and show the rest of the page surviving via a scoped error boundary.|Pairs well with system-design questions about perceived latency.");
+T('p2-arch','Hindsight FC — problem framing and data strategy','Projects','project',90,'high',3,'p1-schema',9,
+"Define Project 2: audit managerial in-match decisions against counterfactual baselines built from similar historical match states, using open event data.|A project with a genuine algorithmic core gives you a real engineering story instead of a CRUD demo.|Write the brief: the decision-audit question, the open data source and its licence, the match-state representation, and the three hardest technical problems.|Sketch the ingestion pipeline end to end on one page: raw events, normalisation, possession chains, state vectors, cohort retrieval, narrative generation.|'Tell me about the hardest technical problem you solved' — this project is engineered to answer it.");
+T('iv-w5','Interview set 5 — rendering, boundaries and frontend system design','Interview','interview',60,'high',3,'next-rsc,react-perf',9,
+"Server/client boundary reasoning, caching behaviour, plus a design prompt: architect a dashboard that stays fast with 50 widgets.|Frontend system design starts appearing at exactly the level you are targeting.|Timed 50 minutes; produce a diagram and a written tradeoff list, not just talking points.|Defend one decision you would reverse under a different constraint (SEO vs interactivity, freshness vs cost).|Mid-level frontend rounds almost always include one open design prompt.");
+
+/* ============ WEEK 6 — Node.js & Express ============ */
+T('node-runtime','Node runtime: event loop phases, libuv and blocking','Node.js','theory',60,'high',3,'js-eventloop',8,
+"Node's loop phases (timers, pending, poll, check, close), the thread pool, process.nextTick vs microtasks, and what actually blocks.|A single CPU-bound function can freeze an entire Node service — knowing why is a core backend competency.|Benchmark a synchronous hash loop against the same work in a worker thread while serving requests, and compare p99 latency.|Find a blocking call in a sample service, move it off the main thread, and measure the change.|'What happens if you run a heavy computation in Node' and 'how is Node concurrent if it is single-threaded'.");
+T('express-lifecycle','Request lifecycle and middleware design','Express','coding',60,'high',2,'node-runtime',8,
+"How a request flows through the middleware stack, next() semantics, ordering, error-first middleware and router mounting.|Middleware order bugs (auth after handler, body parser missing, CORS in the wrong place) are everyday production issues.|Build a stack with request-id, logging, body parsing, auth and a 404 handler, then deliberately misorder two and observe the failure.|Write a middleware that measures handler duration and attaches it to the response headers and the log line.|'Walk me through what happens between the request arriving and the response leaving'.");
+T('express-layers','Layered architecture: controller, service, repository','Express','coding',60,'high',3,'express-lifecycle',9,
+"Separate HTTP concerns from business logic from data access; dependency injection; why services must not know about req/res.|This is the structural question that distinguishes 3-5 YOE backend candidates from people who put everything in route handlers.|Refactor a fat route file into controller/service/repository with an injected repo, then unit-test the service with a fake repo.|Write the same feature twice — one fat handler, one layered — and list the concrete testing and reuse differences.|'How do you structure a Node service' — answer with boundaries and testability, not folder names.");
+T('api-rest','REST API design, versioning and idempotency','Express','theory',60,'high',3,'express-layers',8,
+"Resource modelling, correct status codes, pagination shapes, filtering, versioning strategies, and idempotency keys for unsafe operations.|API design is a shared language with every other team; sloppy contracts leak into every client.|Design the full Palimpsest API surface as an OpenAPI sketch, including error shape and pagination contract.|Add an idempotency key to a POST that creates a job, and prove a duplicate submission returns the original result.|'How do you make a payment endpoint safe to retry' — idempotency is a favourite mid-level question.");
+T('api-validation','Validation, serialisation and error contracts','Express','coding',60,'high',2,'api-rest',7,
+"Validate at the boundary with a schema, never trust client input, and return a single machine-readable error shape everywhere.|A consistent error contract is what makes a frontend able to handle failures gracefully instead of guessing.|Add zod validation middleware that infers TS types, and a central error formatter producing {code, message, details, requestId}.|Make one validation failure, one auth failure and one unexpected crash all produce the same envelope with different codes.|'How do you handle validation errors across a large API' shows systems thinking.");
+T('api-errors','Centralised error handling and operational vs programmer errors','Express','coding',45,'high',3,'api-validation',8,
+"Distinguish expected failures from bugs, keep stack traces off the wire, catch async errors properly, and shut down cleanly on fatal errors.|Error strategy is directly tied to on-call pain, and interviewers at this level ask about it explicitly.|Implement asyncHandler wrapping, an error middleware that logs with a request id, and a process-level handler for unhandled rejections.|Trigger four failure classes and confirm each is logged once, with the right level and no leaked internals.|'What do you do with an uncaught exception in Node' — the strong answer includes graceful shutdown.");
+T('p1-backend','Palimpsest — API skeleton and service layer','Projects','project',90,'high',3,'express-layers,p1-schema',8,
+"Stand up the Node service: layered structure, config loading, health endpoint, request logging, error envelope, and the first two real endpoints.|Getting the skeleton right early means every later feature is cheap; this is also the code you will screen-share.|Implement source registration and document listing end to end with validation, tests and an OpenAPI entry.|Add a /healthz that checks Postgres and Redis and returns component-level status.|Screen-shared code quality carries a lot of weight in final rounds.");
+T('iv-w6','Interview set 6 — backend fundamentals','Interview','interview',60,'high',3,'express-layers,api-rest',9,
+"Middleware ordering, layering, idempotency, error strategy, plus a design task: file-upload API with virus scanning and retries.|Week 6 is your backend checkpoint; you should be able to defend structure decisions with reasons.|Timed 50 minutes; write the API contract and a sequence diagram before speaking about implementation.|Explain two failure scenarios and how your design degrades in each.|Very close to a real mid-level backend round.");
+
+/* ============ WEEK 7 — auth, security, hardening ============ */
+T('auth-basics','Authentication vs authorisation, sessions vs tokens','Express','theory',60,'critical',3,'api-errors',9,
+"Identity vs permission, stateful sessions vs stateless JWTs, refresh strategies, and where each model breaks.|Auth is the most common source of real security incidents and appears in almost every full-stack interview.|Draw both flows end to end, including logout, token theft and revocation, then decide which fits Palimpsest and write down why.|List what happens on logout in each model, and how you revoke access within 60 seconds.|'JWT or sessions' — the good answer is about revocation, scale and blast radius.");
+T('auth-jwt','JWT in depth: signing, claims, expiry and revocation','Express','coding',60,'high',3,'auth-basics',9,
+"Header/payload/signature, HS256 vs RS256, exp/iat/aud/iss claims, short-lived access plus rotating refresh tokens, and why a JWT is not encrypted.|Storing sensitive data in a JWT payload or using a 30-day access token is an instant red flag in interviews.|Issue, verify and rotate tokens by hand with jose, then decode one on jwt.io to prove the payload is readable.|Implement refresh-token rotation with reuse detection that revokes the whole family on replay.|'How would you revoke a JWT' — a deliberately hard follow-up that separates depth from familiarity.");
+T('auth-cookies','Cookies, CSRF, XSS and secure storage','Express','coding',60,'critical',3,'auth-jwt',9,
+"HttpOnly/Secure/SameSite attributes, why localStorage tokens are XSS-exposed, CSRF mechanics and defences, and CORS credentials.|Browser security questions are common at mid level and directly affect the auth design you just built.|Set up cookie auth with SameSite=Lax, add a CSRF token to a state-changing form, then try to attack yourself from a second origin.|Explain why SameSite alone is not a complete CSRF defence and when you still need a token.|'Where do you store the token' is a trap question — answer with threat models.");
+T('authz-rbac','Authorisation models: RBAC, ownership and multi-tenancy','Express','coding',60,'high',4,'auth-cookies',9,
+"Roles vs permissions, resource ownership checks, tenant isolation, and enforcing scope at the data layer rather than the route layer.|Multi-tenant data leaks are catastrophic and are exactly what a workspace-based product like Palimpsest must prevent.|Add workspace scoping to every repository method so a missing tenant filter is impossible by construction, then write tests that attempt cross-tenant reads.|Write a policy function can(user, 'decision:update', resource) and use it in both API and UI.|'How do you stop user A reading user B's data' — answer at the query layer, not the controller.");
+T('api-hardening','Rate limiting, quotas and abuse protection','Express','coding',45,'med',3,'authz-rbac',7,
+"Fixed window vs sliding window vs token bucket, per-user and per-IP keys, Redis-backed counters, and 429 with Retry-After.|LLM endpoints are expensive; rate limiting is both a cost control and an availability control you will actually need.|Implement a Redis token-bucket limiter, load-test it, and confirm limits hold across two app instances.|Add a separate stricter quota for AI endpoints and surface remaining quota in response headers.|'How would you protect this endpoint from abuse' — a natural follow-up to any AI feature.");
+T('obs-logging','Structured logging, request ids and observability basics','DevOps','coding',45,'high',2,'api-errors',7,
+"Structured JSON logs, correlation ids propagated through async work, log levels, and the difference between logs, metrics and traces.|'How would you debug this in production' is a defining 3-5 YOE question, and the answer starts with correlation.|Add pino with a request-id that flows from HTTP through the background worker into the LLM call log line.|Trace one request end to end using only logs, then write down what was missing and add it.|Directly answers 'a user says the app is slow — what do you do first'.");
+T('p1-auth','Palimpsest — auth, workspaces and tenant isolation','Projects','project',90,'high',4,'authz-rbac,p1-backend',8,
+"Ship real auth: signup, login, session cookies, workspace membership, role-based access and tenant-scoped repositories.|This is the part of the project interviewers probe hardest because it is where bugs are dangerous.|Implement it, then write an explicit test suite that tries to break isolation from every endpoint.|Document the threat model in the README: what an attacker with a valid session for workspace A can and cannot do.|A written threat model is unusual in a portfolio project and lands very well.");
+T('iv-w7','Interview set 7 — auth and application security','Interview','interview',60,'high',4,'auth-cookies,authz-rbac',9,
+"JWT vs sessions, refresh rotation, CSRF/XSS, tenant isolation, plus a design task: SSO across three internal apps.|Security depth is a strong differentiator when your years of experience are lower than the target band.|Timed 50 minutes; whiteboard the flows including failure and revocation paths.|Answer 'how would this be attacked' for each design you propose.|Security follow-ups are where mid-level candidates usually run out of depth — do not.");
+
+/* ============ WEEK 8 — SQL / PostgreSQL ============ */
+T('sql-select','SELECT, WHERE, ordering and the mental model of a query','SQL','coding',60,'high',2,'',7,
+"Logical query processing order (FROM, WHERE, GROUP BY, HAVING, SELECT, ORDER BY, LIMIT) and why aliases are not visible in WHERE.|Knowing the evaluation order explains most 'why does this fail' SQL errors and is the base for every later optimisation.|Load a realistic sample database (users, orders, order_items, products) and answer ten questions of increasing complexity.|Write the same result three ways and compare EXPLAIN output for each.|Warm-up question that sets the tone for the whole SQL round.");
+T('sql-joins','JOINs: inner, left, self and the multiplication trap','SQL','coding',60,'critical',3,'sql-select',9,
+"How each join type builds its result set, why a one-to-many join multiplies rows, and how that silently corrupts aggregates.|Double-counted revenue from a fan-out join is a real, expensive production bug and a favourite interview trap.|Join orders to order_items and sum a column, observe inflated totals, then fix it with a pre-aggregated subquery.|Write a self-join to find users who signed up on the same day, and a LEFT JOIN + IS NULL to find users with no orders.|'Find users with no orders', 'why is my SUM wrong after a join' — near-guaranteed questions.");
+T('sql-agg','GROUP BY, HAVING and aggregate reasoning','SQL','coding',60,'critical',2,'sql-joins',9,
+"Grouping semantics, aggregate functions, HAVING as a post-aggregation filter, FILTER clauses and conditional aggregation.|Analytics endpoints live on aggregation, and HAVING vs WHERE is the single most-asked SQL distinction.|Find every user whose total purchase amount exceeds a threshold, then explain precisely why HAVING is required rather than WHERE.|Produce a monthly cohort table with conditional aggregation (COUNT FILTER) in one query.|Expect the exact prompt: 'users with total spend over X, and why HAVING'.");
+T('sql-sub','Subqueries, CTEs and window functions','SQL','coding',60,'high',4,'sql-agg',8,
+"Correlated vs uncorrelated subqueries, WITH clauses for readability, and window functions (ROW_NUMBER, RANK, LAG, SUM OVER) for per-row analytics.|Window functions turn multi-query application logic into one efficient query — a visible level-up in SQL skill.|Rewrite a correlated subquery as a window function and compare plans and timings on a large table.|Get each user's most recent order with ROW_NUMBER, and a running 7-day total with a window frame.|'Get the latest row per group' is the classic mid-level SQL problem.");
+T('sql-index','Indexes, EXPLAIN ANALYZE and query plans','PostgreSQL','coding',60,'critical',4,'sql-sub',10,
+"B-tree structure, composite index column order, covering indexes, selectivity, why an index can be ignored, and how to read a plan.|Reading EXPLAIN ANALYZE is the clearest signal of real database experience and the fastest path to big wins.|Take a slow query on 1M+ rows, read the plan, add the right composite index, and record the before/after timings.|Prove that a leading-column mismatch makes a composite index useless, and that a function on a column kills index usage.|'This query is slow — what do you do' expects: EXPLAIN first, then indexes, then query shape.");
+T('sql-constraints','Constraints, data integrity and schema design','PostgreSQL','coding',45,'high',3,'sql-index',7,
+"Primary/foreign keys, unique and partial unique indexes, CHECK constraints, NOT NULL, cascade behaviour and enum vs lookup table.|Constraints are the cheapest bug prevention available; application-only validation always eventually fails.|Add constraints to your project schema so an invalid state is impossible, then try to insert bad rows from psql.|Implement a partial unique index (one active membership per user per workspace) and test the edge cases.|'Where should validation live' — the strong answer is both, with the database as the last line.");
+T('sql-tx','Transactions, ACID and isolation levels','PostgreSQL','theory',60,'critical',4,'sql-constraints',10,
+"ACID properties, read committed vs repeatable read vs serializable, dirty/non-repeatable/phantom reads, and MVCC in Postgres.|Concurrency bugs are invisible in development and catastrophic in production; this is prime 3-5 YOE material.|Open two psql sessions and reproduce a lost update, a non-repeatable read and a serialization failure by hand.|Write the same money-transfer transaction at two isolation levels and document what changes.|'What isolation level would you use and why' is a strong senior-flavoured question.");
+T('sql-race','Race conditions, locking and idempotent writes','PostgreSQL','coding',60,'high',4,'sql-tx',9,
+"Pessimistic locking (SELECT FOR UPDATE), optimistic locking with version columns, advisory locks, deadlocks and retry loops.|Double-booking, duplicate charges and double-processed jobs all come from unlocked read-modify-write cycles.|Simulate concurrent seat booking with two clients, break it, then fix it with FOR UPDATE and again with a unique constraint.|Implement a job claim query using FOR UPDATE SKIP LOCKED so multiple workers never take the same job.|'How do two servers avoid processing the same job' — SKIP LOCKED is an impressive, concrete answer.");
+T('p2-ingest','Hindsight FC — event ingestion pipeline','Projects','project',90,'high',4,'p2-arch,sql-index',8,
+"Build the ingestion: stream large open event JSON, normalise into matches/events/players/teams, make it idempotent and resumable, and batch-insert efficiently.|Handling data that does not fit comfortably in memory, with resumability, is a genuinely senior engineering story.|Implement a streaming parser plus COPY-based bulk load, with a checkpoint table so a crash mid-import resumes safely.|Import 100+ matches, measure throughput, then halve the time and write down exactly what you changed.|'Tell me about a performance problem you solved' — you will have real numbers.");
+T('iv-w8','Interview set 8 — SQL and concurrency','Interview','interview',60,'critical',4,'sql-index,sql-tx',10,
+"Write six queries under time pressure (latest per group, HAVING aggregate, anti-join, window running total) then discuss isolation and locking.|SQL is where many full-stack candidates are weakest, so strength here is disproportionately valuable.|Timed 50 minutes with a real database; run every query, do not hand-wave syntax.|Explain one query's plan out loud, including why the index was chosen.|Mid-level backend rounds nearly always include live SQL.");
+
+/* ============ WEEK 9 — Prisma, performance, caching, jobs ============ */
+T('prisma-model','Prisma schema, relations and migrations','Prisma','coding',60,'high',2,'sql-constraints',7,
+"Model definitions, relation fields, implicit vs explicit many-to-many, migration workflow, and how the generated client types work.|An ORM that you understand at the SQL level is a productivity win; one you do not is a performance liability.|Model the Palimpsest schema in Prisma, generate the migration, and read the produced SQL line by line.|Add a migration that changes a column type on a table with data, and write the safe multi-step plan.|'How do you run migrations with zero downtime' — expand/contract is the answer they want.");
+T('prisma-query','Queries, select/include and transactions','Prisma','coding',60,'high',3,'prisma-model',7,
+"Fluent queries, select vs include, nested writes, interactive transactions, and reading the SQL Prisma actually emits.|Selecting whole rows by default is a silent performance tax; you should always know the query being sent.|Turn on query logging, run five typical calls, and rewrite each to fetch only the fields the endpoint returns.|Wrap a multi-table write in an interactive transaction with a retry on serialization failure.|'Does the ORM hide the query from you' — prove that it does not for you.");
+T('prisma-n1','N+1 queries: detection and elimination','Prisma','coding',60,'critical',3,'prisma-query',9,
+"How N+1 arises in loops and resolvers, batching with include or a single grouped query, and DataLoader-style batching.|N+1 is the most common ORM performance bug and one of the most reliable interview questions in this space.|Build an endpoint that triggers N+1, prove it in the query log, then fix it two ways and compare timings.|Fix a nested N+1 (two levels deep) without over-fetching unused columns.|'What is an N+1 query and how do you find it' — answer with the log, not the theory.");
+T('perf-pagination','Pagination: offset vs cursor at scale','PostgreSQL','coding',45,'high',3,'sql-index',8,
+"Why OFFSET degrades on deep pages, keyset/cursor pagination with a stable composite sort key, and encoding opaque cursors.|Deep pagination is a real production failure mode and a clean, self-contained design question.|Compare OFFSET 100000 against a keyset query on a large table with EXPLAIN ANALYZE and record both timings.|Implement cursor pagination with a tie-breaking id, opaque base64 cursors, and correct behaviour when rows are inserted mid-scroll.|'How would you paginate a feed with millions of rows' is a favourite.");
+T('perf-cache','Caching with Redis: strategies and invalidation','DevOps','coding',60,'high',4,'perf-pagination',9,
+"Cache-aside vs write-through, TTL choice, key design, stampede protection (locks, jitter), and invalidation on write.|'Just add Redis' is a junior answer; naming the strategy, the invalidation rule and the failure mode is a mid-level answer.|Add caching to your hottest endpoint, measure the hit rate, then force a stampede with concurrent misses and fix it.|Implement cache-aside with a single-flight lock and explicit invalidation on the relevant mutations.|'What do you cache and how do you invalidate it' — the second half is where people fail.");
+T('jobs-queue','Background jobs, queues and retry semantics','DevOps','coding',60,'high',4,'perf-cache',8,
+"Producer/worker split, at-least-once delivery, idempotent handlers, retries with backoff, dead-letter queues and visibility timeouts.|Any real AI feature is asynchronous; queue semantics are unavoidable at this level.|Add BullMQ (or a Postgres SKIP LOCKED queue) for document ingestion with retries, DLQ and progress events.|Make a handler idempotent so a duplicate delivery cannot double-insert, and prove it by replaying a job.|'What happens if the worker crashes halfway' — describe exactly-once effects via idempotency.");
+T('p1-jobs','Palimpsest — ingestion pipeline and realtime progress','Projects','project',90,'high',4,'jobs-queue,p1-auth',8,
+"Wire the async ingestion path: upload, queue, parse, chunk, embed, index, with WebSocket progress updates and resumable failures.|This is the backbone of the product and the part with the most interesting failure modes to discuss.|Implement the pipeline with per-stage status persisted to Postgres so the UI can show exactly where a document is.|Kill the worker mid-job and confirm the document resumes without duplicate chunks.|Failure-recovery stories are the most convincing evidence of production thinking.");
+T('iv-w9','Interview set 9 — performance and data access','Interview','interview',60,'high',4,'prisma-n1,perf-cache',9,
+"N+1, index selection, cursor pagination, cache invalidation, queue retries, plus a design task: an activity feed for 10M users.|Week 9 is the mid-level checkpoint; answers should now include numbers and tradeoffs, not just names.|Timed 50 minutes; for each answer state the measurement you would take first.|Give one wrong-but-common answer and explain why it fails, to show depth.|This is close to the real 3-5 YOE bar you are targeting.");
+
+/* ============ WEEK 10 — production engineering ============ */
+T('linux-basics','Linux, processes and the shell you actually need','DevOps','coding',45,'med',2,'',6,
+"Files and permissions, processes and signals, ports and sockets, journald/logs, and the debugging toolkit: ps, lsof, netstat/ss, df, top, curl, grep.|When production breaks you get a shell, not an IDE; comfort here is the difference between diagnosing and guessing.|Run through a checklist on a VM or container: find the process on a port, tail its logs, check disk and memory, kill and restart it.|Debug a container that exits immediately, using only logs and exit codes.|'The service is down and you have SSH access — what do you type first'.");
+T('docker-basics','Docker: images, layers and multi-stage builds','Docker','coding',60,'high',3,'linux-basics',8,
+"Image vs container, layer caching, build context, multi-stage builds, non-root users, healthchecks and .dockerignore.|Slow bloated images and root containers are common review comments; fixing them shows real deployment experience.|Containerise the Node API with a multi-stage build, then cut the image size by more than half and record both numbers.|Order your Dockerfile so a source change does not reinstall dependencies, and prove it with build timings.|'How would you dockerise this app' plus 'why is your image 1.2GB'.");
+T('docker-compose','Docker Compose, networking and environment config','Docker','coding',60,'high',3,'docker-basics',8,
+"Service definitions, the compose network and DNS by service name, volumes, depends_on with healthchecks, port mapping and env files.|Reproducing the whole stack with one command is what makes a project easy for an interviewer to run.|Write a compose file for app, worker, Postgres, Redis and Nginx, with healthchecks and named volumes so data survives restarts.|Debug a connection refused caused by localhost vs service-name resolution, and write the rule down.|'Why can't my app reach the database from inside Docker' — a very common practical question.");
+T('config-secrets','Configuration, environments and secret handling','DevOps','coding',45,'high',2,'docker-compose',7,
+"Twelve-factor config, validated env schemas at boot, per-environment overrides, and never committing secrets.|Config bugs cause more outages than code bugs, and a validated boot-time schema is an easy quality signal.|Add a zod-validated config module that fails fast on startup with a clear message listing missing variables.|Rotate a secret without downtime and write the runbook steps.|'How do you manage secrets' — mention validation, rotation and blast radius.");
+T('nginx-pm2','Nginx, reverse proxies and process management','DevOps','coding',60,'med',3,'docker-compose',7,
+"Reverse proxy basics, TLS termination, upstreams, timeouts, gzip, proxy headers, static caching, and PM2 clustering vs container replicas.|Understanding what sits in front of your app explains timeouts, 502s and lost client IPs.|Put Nginx in front of the API, set proxy timeouts and forwarded headers, then intentionally cause a 502 and read both sides' logs.|Configure Server-Sent-Event streaming through the proxy without buffering (this matters for LLM streaming).|'A request times out at 60 seconds — where is that coming from'.");
+T('cicd','CI/CD pipelines and safe deployment','DevOps','coding',60,'high',3,'docker-compose',8,
+"Pipeline stages (lint, typecheck, test, build, push, migrate, deploy), caching, environment promotion, and rollback strategy.|Deployment ability is assumed at 3-5 YOE; being able to describe migrations plus rollback is the hard part.|Write a GitHub Actions workflow that builds, tests, pushes an image and runs migrations before deploying.|Describe and rehearse a rollback for a deploy that included a database migration.|'How do you deploy and how do you roll back' — the migration answer is the differentiator.");
+T('prod-debug','Health checks, monitoring and production debugging','DevOps','coding',60,'high',4,'cicd,obs-logging',9,
+"Liveness vs readiness, the four golden signals, alerting thresholds, error tracking, and a repeatable incident triage method.|'Walk me through debugging a production incident' is one of the highest-signal questions in this band.|Add /healthz and /readyz, ship request metrics, then run a written incident drill: symptom, hypotheses, evidence, fix, follow-up.|Write a one-page postmortem for a deliberately induced failure (kill Redis and watch what breaks).|Have one real incident story with a timeline ready to tell in every interview.");
+T('p2-algo','Hindsight FC — possession chains and threat modelling','Projects','project',90,'high',5,'p2-ingest',9,
+"Implement the algorithmic core: segment events into possession chains, compute a pitch-grid expected-threat surface, and derive per-decision value deltas.|A hand-built algorithm with real complexity is the most interview-valuable code in either project.|Build the grid, compute transition values iteratively until convergence, precompute per-match aggregates and store them for fast reads.|Validate outputs against known matches, handle edge cases (set pieces, red cards, stoppages) and document your assumptions.|'Explain an algorithm you implemented' with a whiteboard-able answer is rare and memorable.");
+T('iv-w10','Interview set 10 — systems and production','Interview','interview',60,'high',4,'prod-debug,cicd',9,
+"Docker networking, deploy and rollback, incident triage, plus a system design: multi-tenant document processing at 10k docs/day.|System design is now the main gap between you and a 3-5 YOE offer; practise the structure, not just the content.|Use a fixed structure: requirements, constraints, API, data model, components, scaling, failure modes, tradeoffs — 45 minutes.|Do the whole thing on paper and then critique your own design for the weakest point.|Design rounds reward structure and explicit tradeoffs far more than novelty.");
+
+/* ============ WEEK 11 — LLM fundamentals ============ */
+T('llm-tokens','Tokens, context windows and cost mechanics','LLMs','ai',60,'critical',2,'',9,
+"Tokenisation, why token count is not word count, context window budgeting (system + history + retrieved context + output), truncation strategies and per-token pricing.|Every AI cost, latency and 'the model forgot' bug is a context-budget problem; engineers who cannot count tokens cannot control spend.|Tokenise real inputs with a tokeniser library, build a budget spreadsheet for one Palimpsest request, and compute cost per 1k requests.|Write a context builder that fits system prompt, chat history and retrieved chunks into a fixed budget with a documented drop policy.|'How would you reduce the cost of this feature' — answer with token maths, not vibes.");
+T('llm-params','Messages, system prompts and sampling parameters','LLMs','ai',60,'high',2,'llm-tokens',8,
+"Roles (system/user/assistant/tool), how instructions actually take effect, temperature/top_p, max tokens, stop sequences and determinism limits.|Prompt structure is engineering, not writing; reproducibility matters when you have tests and evals.|Run one task at three temperatures with fixed seeds where available, and record variance in output structure.|Rewrite a vague prompt into a specification with role, constraints, output format and refusal rules, then measure the improvement.|'How do you make LLM output reliable' — structure, constraints, validation, retries.");
+T('llm-structured','Structured output and schema-constrained generation','LLMs','ai',60,'critical',3,'llm-params',9,
+"JSON mode, schema-constrained decoding, tool-call arguments as a typed contract, and validating and repairing model output.|An LLM feeding a database or a UI must return typed data; free text is unusable in a real system.|Define a zod schema, request structured output, validate it, and implement a single repair retry that feeds back validation errors.|Force three failure modes (missing field, wrong enum, hallucinated field) and make your pipeline handle each deterministically.|'How do you get reliable JSON from an LLM' is a standard AI-engineering question.");
+T('llm-tools','Function/tool calling and the agent loop','LLMs','ai',60,'critical',4,'llm-structured',10,
+"How tool schemas are exposed, the call/execute/return loop, multi-step tool use, tool errors, and hard limits on iterations and side effects.|Tool calling is the bridge between the model and your real system, and it carries every authorisation and safety concern with it.|Implement three tools (SQL-backed search, document fetch, decision-link creation), run a multi-step loop, and log every call with arguments and duration.|Add authorisation checks inside each tool, an iteration cap, and a deterministic fallback when the model loops.|'How do you stop an agent doing something destructive' — permissions at the tool boundary.");
+T('llm-stream','Streaming responses end to end','LLMs','ai',45,'high',3,'llm-tools',7,
+"Server-sent events vs chunked responses, backpressure, cancellation on client disconnect, partial-JSON handling and proxy buffering.|Streaming is the difference between a product that feels instant and one that feels broken, and it is a full-stack problem.|Stream a completion from provider to Node to Next.js client with abort support, then confirm the upstream request is actually cancelled.|Handle a mid-stream error so the UI shows a partial answer plus a clear failure state rather than hanging.|'Why did the stream work locally but not behind Nginx' — proxy buffering is a great war story.");
+T('emb-basics','Embeddings and vector similarity','AI','ai',60,'critical',3,'llm-tokens',9,
+"Embeddings as semantic coordinates, cosine vs dot vs euclidean, dimensionality, model choice, normalisation and the limits of semantic similarity.|Retrieval quality is capped by embedding quality; understanding the geometry explains why some searches fail.|Embed 200 real sentences, compute a similarity matrix, and inspect the nearest neighbours for five queries to find where it fails.|Show a case where lexical search beats vector search, and explain why hybrid retrieval exists.|'What is an embedding' then 'why did retrieval return the wrong document'.");
+T('emb-chunk','Chunking strategies and metadata design','AI','ai',60,'critical',3,'emb-basics',9,
+"Fixed vs recursive vs semantic vs structure-aware chunking, overlap, chunk size tradeoffs, and metadata that enables filtering.|Chunking is where most RAG systems quietly fail; it is the highest-leverage tuning decision in the pipeline.|Chunk the same document four ways, run identical queries against each, and score retrieval quality on a 20-question set.|Design the metadata schema for Palimpsest chunks (source, author, timestamp, decision id, permissions) and enforce filters at query time.|'How did you choose your chunk size' — answer with an experiment, not a default.");
+T('vecdb','Vector storage: pgvector, indexes and hybrid search','AI','ai',60,'high',4,'emb-chunk',9,
+"Storing vectors in Postgres, HNSW vs IVFFlat, recall/latency tradeoffs, metadata filtering, and hybrid search combining BM25/full-text with vectors.|Choosing one database over a separate vector store is a real architectural tradeoff you should be able to defend.|Add pgvector to your project, build an HNSW index, and benchmark recall and p95 latency across index parameters.|Implement hybrid search with reciprocal rank fusion and compare it against pure vector search on your question set.|'Why pgvector instead of a dedicated vector database' — operational simplicity vs specialised scale.");
+T('iv-w11','Interview set 11 — AI engineering fundamentals','Interview','interview',60,'high',4,'llm-tools,emb-chunk',9,
+"Tokens and cost, structured output reliability, tool-call safety, embeddings and chunking tradeoffs, plus a design: internal document assistant for 5k employees.|AI-engineering questions are new enough that strong, specific answers stand out sharply.|Timed 50 minutes; include cost per query and latency budget in your design.|Answer 'how do you know it works' with an evaluation plan, not an assurance.|This is where you differentiate from every other full-stack candidate.");
+
+/* ============ WEEK 12 — RAG, agents, safety, conversion ============ */
+T('rag-pipeline','RAG end to end: parse, chunk, embed, retrieve, ground','RAG','ai',90,'critical',4,'vecdb',10,
+"Build the full pipeline: document parsing, cleaning, chunking, embedding, indexing, query rewriting, retrieval, reranking, context construction, grounded generation with citations.|RAG is the default architecture for applied LLM products and the thing you will be asked to whiteboard.|Implement the whole path in Palimpsest, logging retrieved chunks and scores for every answer so failures are debuggable.|Draw the pipeline from memory and mark the three stages most likely to cause a wrong answer.|'Design a RAG system' is the most common AI system-design prompt right now.");
+T('rag-retrieval','Retrieval quality: rewriting, reranking and context construction','RAG','ai',60,'high',4,'rag-pipeline',9,
+"Query rewriting and expansion, HyDE, multi-query retrieval, cross-encoder reranking, deduplication, ordering and the lost-in-the-middle effect.|Naive top-k retrieval is a demo; the gap between demo and product is entirely in this layer.|Add rewriting plus reranking to your pipeline and measure the change in answer accuracy on a fixed question set.|Build the context string deliberately: dedupe, order by relevance and recency, label each chunk with its source for citation.|'How would you improve a RAG system that gives vague answers' — a very practical follow-up.");
+T('rag-eval','Evaluating RAG: datasets, metrics and regression testing','RAG','ai',60,'critical',4,'rag-retrieval',10,
+"Retrieval metrics (recall@k, MRR), answer metrics (faithfulness, relevance), golden datasets, LLM-as-judge and its biases, and CI regression gates.|'How do you know it works' is the question that separates AI engineers from people who wired up an API.|Build a 40-question golden set for Palimpsest with expected sources, then score retrieval and faithfulness before and after one change.|Add an eval script to CI that fails the build if faithfulness drops below your threshold.|Bring the numbers to the interview — almost nobody does.");
+T('rag-halluc','Hallucination reduction and grounded answering','RAG','ai',60,'high',4,'rag-eval',9,
+"Citation enforcement, abstention when evidence is weak, confidence signals, answer verification passes and surfacing sources in the UI.|A system that says 'I do not know' correctly is more valuable than one that always answers, especially for internal knowledge tools.|Make every answer cite chunk ids, then add a verification step that rejects claims without support and re-asks.|Deliberately ask questions the corpus cannot answer and confirm the system abstains rather than inventing.|'How do you prevent hallucinations' — answer with grounding, abstention and evaluation.");
+T('ai-security','Prompt injection, guardrails and AI security','AI','ai',60,'critical',4,'llm-tools',10,
+"Direct and indirect prompt injection, untrusted retrieved content as an attack surface, tool-permission scoping, output sanitisation, PII handling and rate/cost abuse.|Indirect injection through ingested documents is the defining security problem of RAG systems and a standout interview topic.|Plant a malicious instruction inside a document, ingest it, and watch your assistant obey it — then defend with content separation, tool scoping and output checks.|Write the AI threat model section of your README: attacker goals, entry points, mitigations and residual risk.|'What happens if a document contains instructions for the model' — very few candidates have a real answer.");
+T('ai-agents','Agents, memory and multi-step workflows','AI','ai',60,'high',4,'ai-security',8,
+"Planning loops, state and memory (short-term, summarised, retrieved), termination conditions, cost ceilings, human-in-the-loop checkpoints and when an agent is the wrong tool.|Knowing when a deterministic pipeline beats an agent is the mature, hireable opinion.|Implement one bounded agent in Palimpsest (a decision-audit run) with step limits, budget caps and a full trace stored per run.|Rebuild the same feature as a deterministic pipeline and compare cost, latency and reliability with real numbers.|'When would you not use an agent' — a question designed to detect hype-following.");
+T('ai-ops','Cost, latency and production monitoring for AI features','AI','ai',60,'high',4,'ai-agents',9,
+"Model routing by task, caching (exact and semantic), prompt compression, batching, streaming for perceived latency, token/cost dashboards and per-tenant quotas.|AI features fail on unit economics more often than on quality; this is the operational half of AI engineering.|Instrument every call with tokens, cost, latency and cache status, then cut cost per answer by 40% and document each lever.|Add semantic caching for repeated questions and measure hit rate and the risk of a stale answer.|'Your AI feature costs too much — what do you do' with five concrete levers.");
+T('p1-ai','Palimpsest — retrieval, decision graph and grounded answers','Projects','project',90,'critical',5,'rag-halluc,p1-jobs',10,
+"Ship the intelligence layer: hybrid retrieval over the decision corpus, tool-calling to traverse the decision graph, cited answers and contradiction detection on new pull requests.|This is the feature that makes the project memorable — it answers 'why is the code like this' with evidence.|Implement it with full traces, evals from your golden set and a UI that shows sources beside every claim.|Demo the contradiction check: open a PR that reverses a documented decision and have the system surface the original reasoning.|Have a two-minute demo and a ten-minute architecture walkthrough ready.");
+T('p2-ai','Hindsight FC — cohort retrieval and decision narratives','Projects','project',90,'high',5,'p2-algo,rag-retrieval',9,
+"Embed match states, retrieve comparable historical situations as a counterfactual cohort, compute the outcome delta, and generate a grounded narrative that must cite the underlying events.|Combining a numeric model with grounded generation is unusual and gives you a distinctive technical story.|Build the state vector, the cohort query with metadata filters, the delta computation and a narrative generator constrained to cited evidence.|Add an evaluation that rejects narratives containing claims not present in the retrieved events.|'How do you stop the model making things up about the match' — evidence binding.");
+T('p1-deploy','Palimpsest — deploy, harden and document','Projects','project',90,'high',4,'p1-ai,cicd',8,
+"Ship it publicly: Docker Compose or a managed host, Nginx, TLS, CI/CD with migrations, health checks, backups, seeded demo workspace and a README with diagrams.|A live URL plus a clear README converts a project from a claim into evidence.|Deploy, then run a cold-start test: a stranger should be able to try the demo in under two minutes.|Write the README sections interviewers actually read: problem, architecture, tradeoffs, failure modes, what you would do next.|Send the link before the interview — it changes the conversation.");
+T('p2-deploy','Hindsight FC — visualisation, caching and deploy','Projects','project',90,'med',4,'p2-ai',7,
+"Finish the product surface: pitch-grid visualisation, decision timeline, search, cached precomputed aggregates and a public deployment.|Visualisation makes the algorithm legible in a demo; caching makes it fast enough to demo at all.|Precompute per-match aggregates on ingest, cache hot reads in Redis, and render the threat surface and timeline in the UI.|Load-test the two heaviest endpoints and record p95 before and after caching.|A visual demo plus real numbers is a strong closing exhibit.");
+T('sd-drills','System design drills for full-stack + AI roles','System Design','interview',90,'critical',5,'prod-debug,rag-pipeline',10,
+"Practise the format on five prompts: URL shortener, notification system, document processing pipeline, real-time collaborative editor, and a company-wide AI assistant.|Design is the highest-variance round; a repeatable structure removes most of that variance.|Fixed structure each time (requirements, scale estimates, API, data model, components, bottlenecks, failure modes, tradeoffs) with a 40-minute cap.|Record yourself on two prompts and grade the structure, not the content.|This is the round that decides between a junior and a mid-level offer.");
+T('iv-behav','Behavioural stories and project narrative','Interview','interview',60,'high',3,'p1-deploy',9,
+"Write eight STAR stories: hardest bug, performance win, disagreement, missed deadline, incident, refactor, learning something fast, and a decision you would reverse.|Strong technical candidates lose offers here by rambling; prepared stories with numbers close the gap.|Write each story in under 200 words with a concrete result, then rehearse aloud until each takes 90 seconds.|Map every story to a project artefact you can show on screen.|Every loop includes this round, and it is the cheapest one to win.");
+T('iv-final','Final mock loop — full 3-5 YOE simulation','Interview','interview',90,'critical',5,'sd-drills,iv-behav',10,
+"Run a complete loop in one sitting: JS/React deep dive, backend and SQL, system design with an AI component, project deep dive, behavioural.|The final rehearsal under realistic conditions is what makes the real thing feel routine.|Three hours, no notes, camera on, timed sections; score each round and write the three weakest areas.|Spend the remaining days only on those three weaknesses.|This is your readiness gate — repeat the weak rounds until they are boring.");
+T('rev-final','Final consolidation — one-page maps per domain','Interview','revision',60,'high',3,'iv-final',8,
+"Produce one page per domain (JS, React, Next, Node, SQL, infra, AI) with the ten questions you now answer confidently and the phrasing you use.|Interview performance is retrieval speed; your own compressed notes are the fastest retrieval path.|Write them from memory first, then fill gaps from your earlier consolidation notes.|Do a 20-minute rapid-fire self-quiz across all seven pages the morning before any interview.|This becomes your permanent pre-interview warm-up ritual.");
+T('git-pro','Git for teams: rebase, bisect and clean history','Git','coding',45,'med',2,'',6,
+"Interactive rebase, merge vs rebase, conflict resolution, cherry-pick, reflog recovery, bisect, and commit/PR hygiene.|Your commit history is visible in every portfolio repo, and 'how would you find which commit broke this' is a common practical question.|Rewrite a messy branch into clean logical commits with interactive rebase, then recover a deleted branch with reflog.|Use git bisect to find a deliberately introduced bug across 20 commits.|'How do you resolve a conflict' and 'merge or rebase' — have a reasoned team-context answer.");
+
+/* ============================================================
+   STATE + STORAGE
+   ============================================================ */
+const KEY='ej.plan.v1';
+const Mem={};
+const hasLS=(()=>{try{localStorage.setItem('__t','1');localStorage.removeItem('__t');return true}catch(e){return false}})();
+const Store={
+  read(){ try{ return JSON.parse(hasLS?localStorage.getItem(KEY):Mem[KEY]||'null'); }catch(e){ return null } },
+  write(v){ const s=JSON.stringify(v); if(hasLS){try{localStorage.setItem(KEY,s)}catch(e){Mem[KEY]=s}} else Mem[KEY]=s; }
+};
+function iso(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0') }
+function parseISO(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d) }
+function addDays(d,n){ const x=new Date(d.getTime()); x.setDate(x.getDate()+n); return x }
+function blankState(){ return {v:1, start:iso(new Date()), updatedAt:0, tasks:{}, hol:[], dayNote:{}, cfg:{}}; }
+let state = Store.read() || blankState();
+if(!state.tasks) state.tasks={}; if(!state.hol) state.hol=[]; if(!state.dayNote) state.dayNote={};
+const START = parseISO(state.start);
+let _sv=null;
+function save(){ clearTimeout(_sv); _sv=setTimeout(()=>Store.write(state),140) }
+function saveNow(){ clearTimeout(_sv); Store.write(state) }
+window.addEventListener('beforeunload',saveNow);
+function dateFor(i){ return addDays(START,i) }
+function dayIndexOf(d){ return Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate()) - START)/86400000) }
+const TODAY = dayIndexOf(new Date());
+function st(id){ return state.tasks[id] || (state.tasks[id]={s:'planned'}) }
+function stRead(id){ return state.tasks[id] || {s:'planned'} }
+
+/* ============================================================
+   REVISION TASK SYNTHESIS
+   ============================================================ */
+const REVISABLE = C.filter(t=>t.iw>=9 && !['interview','revision','project'].includes(t.kind));
+function revTask(anchor,k){
+  return {id:anchor.id+'::r'+k, title:REV_LABEL[k]+' — '+anchor.title, cat:anchor.cat, kind:'revision',
+    min:REV_MIN[k], pri:k<2?'med':'high', diff:anchor.diff, iw:anchor.iw, prereq:[anchor.id], anchorId:anchor.id, gap:REV_OFFSETS[k],
+    what:'Spaced recall of “'+anchor.title+'”, '+REV_OFFSETS[k]+' days after you first studied it.',
+    why:'Retrieval practice at increasing intervals is what turns a topic you understood once into a topic you can explain under interview pressure.',
+    how:k===0?'Close your notes. Write the core idea and one gotcha from memory, then check and correct.'
+      :k===1?'Re-solve the practice problem from a blank file. No notes, no autocomplete assistance.'
+      :k===2?'Answer the interview question aloud in under 90 seconds, then compare against your cheat sheet.'
+      :'Apply it to your project code: find the place where this concept is doing real work, or add it.',
+    practice:'Score yourself 1-5. Anything under 4 gets flagged shaky so it comes back sooner and drops the skill score.',
+    interview:'This is exactly the recall speed an interviewer is measuring when they ask a follow-up question.'};
+}
+const TASKMAP = {}; C.forEach(t=>TASKMAP[t.id]=t);
+
+/* ============================================================
+   SCHEDULER
+   ============================================================ */
+function capFor(i,s){ if(s.hol.indexOf(i)>-1) return 0; return CAP[dateFor(i).getDay()] }
+
+function buildSchedule(s, today){
+  const days=[]; for(let i=0;i<HORIZON;i++) days.push({i, cap:capFor(i,s), used:0, items:[], hol:s.hol.indexOf(i)>-1});
+  const placed={}; const all=[];
+
+  // pass 1: pinned work (completed / in-progress stays where it happened)
+  C.forEach(t=>{
+    const ts=s.tasks[t.id];
+    if(ts && ts.p!=null && (ts.s==='completed'||ts.s==='inprogress')){
+      const d=Math.max(0,Math.min(HORIZON-1,ts.p));
+      days[d].items.push(t); days[d].used+=t.min; placed[t.id]=d; all.push(t);
+    }
+  });
+
+  // pass 2: sequential packing of remaining curriculum
+  let flow = 0;
+  C.forEach(t=>{
+    if(placed[t.id]!=null) return;
+    const ts=s.tasks[t.id]||{};
+    let start = flow;
+    if(today!=null) start=Math.max(start, today);
+    if(ts.s==='backlog' && ts.bk!=null) start=Math.max(start, ts.bk+1);
+    t.prereq.forEach(p=>{ if(placed[p]!=null) start=Math.max(start, placed[p]); });
+    let d=start;
+    while(d<HORIZON-1 && (days[d].cap===0 || days[d].used + t.min > days[d].cap)) d++;
+    days[d].items.push(t); days[d].used+=t.min; placed[t.id]=d; all.push(t);
+    flow=d;
+  });
+
+  // pass 3: spaced revision, anchored to where the source topic actually landed
+  REVISABLE.forEach(a=>{
+    REV_OFFSETS.forEach((off,k)=>{
+      const base=placed[a.id]; if(base==null) return;
+      let target=base+off; if(target>=PLAN_DAYS) return;      // do not schedule revision past the plan
+      const r=revTask(a,k); const ts=s.tasks[r.id];
+      if(ts && ts.p!=null && (ts.s==='completed'||ts.s==='inprogress')){
+        const d=Math.max(0,Math.min(HORIZON-1,ts.p)); days[d].items.push(r); days[d].used+=r.min; placed[r.id]=d; all.push(r); return;
+      }
+      if(today!=null) target=Math.max(target,today);
+      if(ts && ts.s==='backlog' && ts.bk!=null) target=Math.max(target,ts.bk+1);
+      let d=target, guard=0;
+      while(d<HORIZON-1 && guard++<HORIZON && (days[d].cap===0 || days[d].used + r.min > days[d].cap+15)) d++;
+      days[d].items.push(r); days[d].used+=r.min; placed[r.id]=d; all.push(r);
+    });
+  });
+
+  days.forEach(d=>d.items.sort((a,b)=>rank(a)-rank(b)));
+  return {days, placed, all, index:idx(all)};
+}
+function idx(list){ const m={}; list.forEach(t=>m[t.id]=t); return m }
+const PRI={critical:0,high:1,med:2,low:3};
+function rank(t){
+  const s=stRead(t.id);
+  let r=PRI[t.pri]!=null?PRI[t.pri]:2;
+  if(s.s==='backlog') r-=1.5;                 // carried-over work goes first
+  if(t.kind==='revision') r+=0.4;             // revision after the day's new material
+  if(t.kind==='interview') r+=0.6;            // interview drill closes the session
+  if(s.s==='completed') r+=10;
+  return r;
+}
+
+let BASE = buildSchedule(blankState(), null);   // untouched curriculum = "originally planned" dates
+const TCLAMP = Math.max(0, Math.min(TODAY, HORIZON-60));
+let SCH  = buildSchedule(state, TCLAMP);
+function reschedule(){ SCH = buildSchedule(state, TCLAMP); _M=null; save(); renderAll(); }
+
+/* ============================================================
+   DERIVED METRICS
+   ============================================================ */
+let _M=null;
+function metrics(){ if(!_M) _M={sc:scores(), c:counts(), sk:streak()}; return _M }
+function weightOf(t){ return t.min*(1+t.iw/10) }
+function scores(){
+  const acc={}; const add=(c,w,done,weak)=>{ acc[c]=acc[c]||{t:0,d:0,w:0}; acc[c].t+=w; if(done)acc[c].d+=w; acc[c].w+=weak?1:0 };
+  SCH.all.forEach(t=>{
+    const s=stRead(t.id); const w=weightOf(t);
+    let cats=[t.cat];
+    if(t.cat==='RAG'||t.cat==='LLMs') cats.push('AI');
+    if(t.cat==='Prisma'||t.cat==='PostgreSQL') cats.push('SQL');
+    if(t.cat==='Docker') cats.push('DevOps');
+    if(t.cat==='System Design') cats.push('Interview');
+    cats.forEach(c=>add(c,w,s.s==='completed',s.weak));
+  });
+  const out={};
+  CATS.forEach(c=>{ const a=acc[c]; if(!a){out[c]=null;return}
+    out[c]=Math.max(0,Math.min(100,Math.round(100*a.d/a.t) - 4*a.w)); });
+  let T=0,D=0,W=0; SCH.all.forEach(t=>{const s=stRead(t.id);const w=weightOf(t);T+=w;if(s.s==='completed')D+=w;if(s.weak)W++});
+  out.__overall=Math.max(0,Math.min(100,Math.round(100*D/T)-Math.round(W*0.7)));
+  return out;
+}
+function counts(){
+  let done=0,total=0,back=0,mins=0,over=0;
+  SCH.all.forEach(t=>{ const s=stRead(t.id); total++; if(s.s==='completed'){done++;mins+=t.min} if(s.s==='backlog')back++; if(SCH.placed[t.id]>=PLAN_DAYS)over++; });
+  return {done,total,back,mins,over};
+}
+function streak(){
+  let n=0;
+  for(let i=Math.min(TODAY,PLAN_DAYS-1); i>=0; i--){
+    const d=SCH.days[i]; if(!d) break;
+    const allDone = d.items.length>0 && d.items.every(t=>stRead(t.id).s==='completed');
+    if(d.hol || allDone){ n++; continue }
+    if(d.items.length===0) continue;
+    if(i===TODAY) continue;
+    break;
+  }
+  return n;
+}
+function phaseOf(i){ return PHASES.find(p=>i>=p.from&&i<=p.to) || PHASES[2] }
+function projStats(p){
+  const list=C.filter(t=>t.id.indexOf(p)===0);
+  const done=list.filter(t=>stRead(t.id).s==='completed').length;
+  return {done,total:list.length,pct:Math.round(100*done/list.length),list};
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const $=s=>document.querySelector(s);
+const el=(t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e};
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
+let view='month', cursor=new Date(), selected=null, filters={q:'',cat:'',kind:'',status:''};
+function colorOf(t){ return 'var('+(CATCOLOR[t.kind==='revision'?'Revision':t.cat]||'--mut')+')' }
+function fmt(d){ return DOW[(d.getDay()+6)%7]+', '+d.getDate()+' '+MON[d.getMonth()].slice(0,3) }
+function hhmm(m){ return m>=60? (m/60).toFixed(m%60?1:0)+'h' : m+'m' }
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'),2200) }
+
+function renderStats(){
+  const m=metrics(), c=m.c, sc=m.sc, sk=m.sk, ph=phaseOf(Math.min(TODAY,PLAN_DAYS-1)), wk=Math.floor(TODAY/7)+1;
+  const left=Math.max(0,PLAN_DAYS-TODAY);
+  $('#cdNum').textContent = TODAY<0? PLAN_DAYS : left;
+  $('#cdLab').textContent = TODAY>=PLAN_DAYS? 'plan complete — keep drilling interviews' : 'days left of 84 · week '+Math.min(12,Math.max(1,wk))+' of 12';
+  $('#phaseLine').textContent = 'Phase '+ph.n+' · '+ph.name;
+  const p1=projStats('p1-'), p2=projStats('p2-');
+  const box=[
+    ['Completion', Math.round(100*c.done/c.total)+'%', c.done+' of '+c.total+' tasks', Math.round(100*c.done/c.total)],
+    ['Overall skill score', sc.__overall, 'weighted by interview value', sc.__overall],
+    ['Study logged', (c.mins/60).toFixed(1)+'h', 'target ~2h per day', Math.min(100,Math.round(100*c.mins/(Math.max(1,TODAY+1)*120)))],
+    ['Streak', sk+'d', 'days finished or on holiday', Math.min(100,sk*8)],
+    ['Backlog', c.back, c.back? 'carried forward, nothing lost':'nothing carried over', c.back?Math.min(100,c.back*12):0],
+    ['Projects', Math.round((p1.pct+p2.pct)/2)+'%', 'Palimpsest '+p1.done+'/'+p1.total+' · Hindsight '+p2.done+'/'+p2.total, (p1.pct+p2.pct)/2]
+  ];
+  $('#stats').innerHTML = box.map(b=>'<div class="stat"><div class="k">'+b[0]+'</div><div class="v">'+b[1]+'</div><div class="sub">'+b[2]+'</div><div class="bar"><i style="width:'+Math.max(0,Math.min(100,b[3]))+'%"></i></div></div>').join('');
+  if(c.over>0) $('#calLoad').textContent = c.over+' task'+(c.over>1?'s':'')+' pushed past day 84';
+  else $('#calLoad').textContent='';
+}
+
+function dayCell(d, inMonth){
+  const i=dayIndexOf(d), sd=(i>=0&&i<HORIZON)?SCH.days[i]:null;
+  const cell=el('button','cell'+(inMonth?'':' out')+(i===TODAY?' today':'')+(sd&&sd.hol?' hol':'')+(selected===i?' sel':''));
+  const items=sd?sd.items:[];
+  const done=items.filter(t=>stRead(t.id).s==='completed').length;
+  const head=el('div','d','<b>'+d.getDate()+'</b>'+(sd&&sd.hol?'<span class="pill">Holiday</span>':(items.length?'<span class="pill">'+done+'/'+items.length+'</span>':'')));
+  cell.appendChild(head);
+  items.slice(0,3).forEach(t=>{
+    const s=stRead(t.id);
+    const c=el('div','chip'+(s.s==='completed'?' done':''),esc(t.title));
+    c.style.borderLeftColor=colorOf(t);
+    if(s.s==='backlog') c.style.background='rgba(242,128,106,.13)';
+    cell.appendChild(c);
+  });
+  if(items.length>3) cell.appendChild(el('div','more','+'+(items.length-3)+' more'));
+  if(sd && sd.cap>0 && items.length){
+    const load=el('div','load'+(sd.used>sd.cap?' over':''),'');
+    load.appendChild(el('i')); load.firstChild.style.width=Math.min(100,Math.round(100*sd.used/sd.cap))+'%';
+    cell.appendChild(load);
+  }
+  cell.onclick=()=>openDay(i);
+  return cell;
+}
+
+const CELLS={};
+function markSelected(){ for(const k in CELLS){ CELLS[k].classList.toggle('sel', Number(k)===selected) } }
+function renderCalendar(){
+  const area=$('#calArea'); area.innerHTML=''; for(const k in CELLS) delete CELLS[k];
+  if(view==='month'){
+    $('#calTitle').textContent = MON[cursor.getMonth()]+' '+cursor.getFullYear();
+    const first=new Date(cursor.getFullYear(),cursor.getMonth(),1);
+    const offset=(first.getDay()+6)%7;
+    const start=addDays(first,-offset);
+    const dow=el('div','dow',DOW.map(d=>'<span>'+d+'</span>').join(''));
+    const grid=el('div','grid');
+    const frag=document.createDocumentFragment();
+    for(let k=0;k<42;k++){ const d=addDays(start,k); const c=dayCell(d, d.getMonth()===cursor.getMonth()); CELLS[dayIndexOf(d)]=c; frag.appendChild(c) }
+    grid.appendChild(frag);
+    area.appendChild(dow); area.appendChild(grid);
+    $('#calPill').textContent='';
+  } else {
+    const base=cursor, off=(base.getDay()+6)%7, ws=addDays(base,-off);
+    $('#calTitle').textContent = fmt(ws)+' – '+fmt(addDays(ws,6));
+    const wi=Math.floor(dayIndexOf(ws)/7)+1;
+    $('#calPill').textContent = (wi>=1&&wi<=12)?'Plan week '+wi:'Outside plan';
+    const wrap=el('div','weekview');
+    for(let k=0;k<7;k++){
+      const d=addDays(ws,k), i=dayIndexOf(d), sd=(i>=0&&i<HORIZON)?SCH.days[i]:null;
+      const box=el('div','wday'+(i===TODAY?' today':'')+(sd&&sd.hol?' hol':''));
+      const items=sd?sd.items:[];
+      const h=el('div','');
+      h.innerHTML='<header><b>'+fmt(d)+'</b><span>'+(sd&&sd.hol?'Holiday':items.length?hhmm(sd.used)+' planned · cap '+hhmm(sd.cap):'No plan')+'</span></header>';
+      box.appendChild(h.firstChild);
+      const list=el('div','tasks');
+      items.forEach(t=>list.appendChild(taskRow(t,i)));
+      if(!items.length) list.appendChild(el('div','empty', sd&&sd.hol?'Marked as a holiday. Work moved forward automatically.':'Nothing scheduled. Good day for Valorant or a walk.'));
+      box.appendChild(list);
+      const bar=el('div','row'); bar.style.marginTop='10px';
+      const b1=el('button','btn ghost', sd&&sd.hol?'Clear holiday':'Mark holiday'); b1.onclick=()=>toggleHoliday(i);
+      const b2=el('button','btn ghost','Open day'); b2.onclick=()=>openDay(i);
+      bar.appendChild(b1); bar.appendChild(b2); box.appendChild(bar);
+      wrap.appendChild(box);
+    }
+    area.appendChild(wrap);
+  }
+  $('#legend').innerHTML = [['Frontend','--react'],['Backend','--node'],['Data','--sql'],['Infra','--prod'],['AI','--ai'],['Project','--proj'],['Interview','--iv'],['Revision','--rev']]
+    .map(l=>'<span><i style="background:var('+l[1]+')"></i>'+l[0]+'</span>').join('');
+}
+
+function taskRow(t,dayIdx){
+  const s=stRead(t.id);
+  const row=el('div','task'+(s.s==='completed'?' done':''));
+  row.style.borderLeftColor=colorOf(t);
+  const cb=el('button','cb'+(s.s==='completed'?' on':''),'✓');
+  cb.title='Mark complete';
+  cb.onclick=e=>{e.stopPropagation(); toggleDone(t.id,dayIdx)};
+  const mid=el('div',''); mid.style.flex='1';
+  mid.appendChild(el('div','tt',esc(t.title)));
+  const meta=['<b>'+hhmm(t.min)+'</b>', t.cat, KINDLABEL[t.kind], 'difficulty '+t.diff+'/5'];
+  if(t.iw>=9) meta.push('high interview value');
+  mid.appendChild(el('div','meta',meta.join(' <span style="opacity:.4">·</span> ')));
+  const tags=el('div','tags');
+  if(s.s==='backlog') tags.appendChild(el('span','tag bk','Backlog'));
+  if(s.s==='inprogress') tags.appendChild(el('span','tag','In progress'));
+  if(s.weak) tags.appendChild(el('span','tag crit','Shaky'));
+  if(t.pri==='critical') tags.appendChild(el('span','tag crit','Critical'));
+  else if(t.pri==='high') tags.appendChild(el('span','tag high','High'));
+  row.appendChild(cb); row.appendChild(mid); row.appendChild(tags);
+  row.onclick=()=>openDay(dayIdx,t.id);
+  return row;
+}
+
+/* ---------- drawer: day detail ---------- */
+function openDay(i, focusId){
+  if(i<0||i>=HORIZON) return;
+  selected=i; const sd=SCH.days[i], d=dateFor(i);
+  $('#dTitle').textContent = fmt(d)+' '+d.getFullYear();
+  const wk=Math.floor(i/7)+1, ph=phaseOf(Math.min(i,PLAN_DAYS-1));
+  $('#dSub').textContent = (i<PLAN_DAYS? 'Plan day '+(i+1)+' · week '+wk+' · phase '+ph.n : 'Overflow day — beyond the 84-day plan')
+    + ' · ' + (sd.hol? 'Holiday' : hhmm(sd.used)+' scheduled of '+hhmm(sd.cap));
+  const b=$('#dBody'); b.innerHTML='';
+
+  const row=el('div','row');
+  const bHol=el('button','btn'+(sd.hol?' on':''), sd.hol?'Clear holiday':'Mark this day a holiday');
+  bHol.onclick=()=>{toggleHoliday(i); openDay(i)};
+  const bAll=el('button','btn','Complete everything');
+  bAll.onclick=()=>{sd.items.forEach(t=>{const s=st(t.id); s.s='completed'; s.p=i; s.done=iso(new Date())}); reschedule(); openDay(i); toast('Day logged')};
+  const bBk=el('button','btn','Push all to backlog');
+  bBk.onclick=()=>{sd.items.forEach(t=>{const s=st(t.id); if(s.s!=='completed'){s.s='backlog'; s.bk=i; s.p=null}}); reschedule(); openDay(i); toast('Moved forward, nothing lost')};
+  row.appendChild(bHol); row.appendChild(bAll); row.appendChild(bBk);
+  b.appendChild(row);
+
+  if(sd.hol){
+    b.appendChild(el('div','review','<b>Holiday.</b> Everything that was scheduled here has been pushed into the next available slots, prerequisites first, respecting the daily time cap. The curriculum order is unchanged.'));
+  }
+  if(!sd.items.length && !sd.hol) b.appendChild(el('div','empty','Nothing scheduled. Either the plan has not reached this day yet, or you have cleared it.'));
+
+  sd.items.forEach(t=>b.appendChild(detailCard(t,i,focusId===t.id)));
+
+  // leisure block
+  const doneAll = sd.items.length>0 && sd.items.every(t=>stRead(t.id).s==='completed');
+  const gameNight=[3,6,0].indexOf(d.getDay())>-1;
+  b.appendChild(el('div','review','<b>After 11:30 PM — '+(doneAll?'Valorant unlocked':'Valorant')+'</b><ul><li>'+
+    (doneAll? 'Session done. Play guilt-free — this is the reward loop that keeps the other 83 days working.'
+            : 'Finish the block above first, then play. If the session ran long, take the game anyway and push one task to backlog instead of sleeping four hours.')+'</li>'+
+    (gameNight?'<li>Designated long session tonight: two or three competitive games is fine.</li>':'<li>Short night: one unrated or a deathmatch, then stop.</li>')+
+    '<li>Hard rule: no ranked queue before the study block, ever.</li></ul>'));
+
+  // notes
+  b.appendChild(el('div','note-lbl','Notes for this day'));
+  const ta=el('textarea'); ta.value=state.dayNote[i]||''; ta.placeholder='What clicked, what did not, what to revisit.';
+  ta.oninput=()=>{state.dayNote[i]=ta.value; save()};
+  b.appendChild(ta);
+
+  $('#drawer').classList.add('on'); $('#scrim').classList.add('on');
+  markSelected();
+  if(focusId){ const n=b.querySelector('[data-id="'+focusId+'"]'); if(n) n.scrollIntoView({block:'center'}) }
+}
+
+function detailCard(t,i,open){
+  const s=stRead(t.id);
+  const card=el('div','detail'); card.style.borderLeftColor=colorOf(t); card.setAttribute('data-id',t.id);
+  const head=el('div','dt');
+  const cb=el('button','cb'+(s.s==='completed'?' on':''),'✓');
+  cb.onclick=()=>{toggleDone(t.id,i); openDay(i,t.id)};
+  const box=el('div',''); box.style.flex='1';
+  box.appendChild(el('h4',null,esc(t.title)));
+  const meta=[hhmm(t.min), t.cat, KINDLABEL[t.kind], 'difficulty '+t.diff+'/5', 'priority '+t.pri];
+  box.appendChild(el('div','meta',meta.join(' · ')));
+  head.appendChild(cb); head.appendChild(box);
+  card.appendChild(head);
+
+  const qa=el('div','qa');
+  [['What','what'],['Why','why'],['How','how'],['Practice','practice'],['In interviews','interview']].forEach(p=>{
+    if(t[p[1]]) qa.appendChild(el('div',null,'<em>'+p[0]+'</em>'+esc(t[p[1]])));
+  });
+  card.appendChild(qa);
+
+  const acts=el('div','row'); acts.style.margin='12px 0 0';
+  const mk=(label,fn,on)=>{const x=el('button','btn ghost'+(on?' on':''),label); x.onclick=fn; acts.appendChild(x)};
+  mk(s.s==='inprogress'?'In progress':'Start', ()=>{const q=st(t.id); q.s=q.s==='inprogress'?'planned':'inprogress'; q.p=q.s==='inprogress'?i:null; reschedule(); openDay(i,t.id)}, s.s==='inprogress');
+  mk('Backlog', ()=>{const q=st(t.id); if(q.s==='backlog'){q.s='planned';q.bk=null}else{q.s='backlog';q.bk=i;q.p=null} reschedule(); openDay(i,t.id); toast('Rescheduled — prerequisites respected')}, s.s==='backlog');
+  mk('Flag shaky', ()=>{const q=st(t.id); q.weak=!q.weak; reschedule(); openDay(i,t.id)}, s.weak);
+  card.appendChild(acts);
+
+  const nt=el('textarea'); nt.style.marginTop='10px'; nt.value=(state.tasks[t.id]&&state.tasks[t.id].note)||'';
+  nt.placeholder='Your answer, the gotcha you hit, the link you want later.';
+  nt.oninput=()=>{st(t.id).note=nt.value; save()};
+  card.appendChild(nt);
+
+  const planned=BASE.placed[t.id];
+  const hist=[];
+  if(planned!=null && planned!==i) hist.push('Originally planned '+fmt(dateFor(planned))+' → now '+fmt(dateFor(i))+' ('+(i-planned>0?'+':'')+(i-planned)+' days)');
+  else if(planned!=null) hist.push('On its original date');
+  if(t.prereq && t.prereq.length) hist.push('Needs first: '+t.prereq.map(p=>(SCH.index[p]||TASKMAP[p]||{title:p}).title).join(', '));
+  if(s.done) hist.push('Completed '+s.done);
+  card.appendChild(el('div','hist',hist.join(' · ')));
+  return card;
+}
+
+function toggleDone(id,dayIdx){
+  const s=st(id);
+  if(s.s==='completed'){ s.s='planned'; s.p=null; s.done=null }
+  else { s.s='completed'; s.p=dayIdx; s.bk=null; s.done=iso(new Date()) }
+  reschedule();
+}
+function toggleHoliday(i){
+  const k=state.hol.indexOf(i);
+  if(k>-1) state.hol.splice(k,1); else state.hol.push(i);
+  reschedule(); toast(k>-1?'Holiday cleared — plan pulled back in':'Holiday set — curriculum shifted forward');
+}
+function closeDrawer(){ $('#drawer').classList.remove('on'); $('#scrim').classList.remove('on'); selected=null; markSelected() }
+
+/* ============================================================
+   SIDE PANELS
+   ============================================================ */
+function renderScores(){
+  const sc=metrics().sc; const out=$('#scores'); out.innerHTML='';
+  const order=['__overall'].concat(CATS);
+  order.forEach(c=>{
+    const v=c==='__overall'?sc.__overall:sc[c]; if(v==null) return;
+    const name=c==='__overall'?'Overall':c;
+    const col=c==='__overall'?'--react':(CATCOLOR[c]||'--mut');
+    const p=el('div','pbar','<div class="l"><span>'+name+'</span><span>'+v+'</span></div><div class="bar"><i style="width:'+v+'%;background:var('+col+')"></i></div>');
+    if(c==='__overall'){ p.style.marginBottom='14px'; p.querySelector('.l').style.fontSize='13.5px' }
+    out.appendChild(p);
+  });
+}
+
+const PROJECTS=[
+ {key:'p1-',name:'Palimpsest',tag:'Decision memory for engineering teams · Next.js · Node · Postgres+pgvector · Redis · queues · RAG · tool calling',
+  pitch:'Every codebase is layered over erased reasoning. Palimpsest ingests pull requests, incident threads, RFCs and design docs, extracts the decisions inside them into a linked decision graph, and answers “why is this the way it is?” with cited evidence — then flags new pull requests that quietly contradict a decision nobody remembers making.',
+  detail:'<b>Problem.</b> New engineers ask why a rule exists; the person who knew has left. Documentation records what, not why, and search returns documents rather than decisions.<br><br>'+
+   '<b>Personas.</b> A joiner in week one who needs context fast; a staff engineer reviewing a PR that reverses a hard-won choice; an engineering manager auditing what a team actually decided last quarter.<br><br>'+
+   '<b>Architecture.</b> Next.js App Router (server components for reads, server actions for writes) → Node API (controller/service/repository, cookie sessions, workspace-scoped repos) → Postgres with pgvector for documents, chunks, decisions and decision_links → Redis for caching, rate limits and the job queue → worker processes doing parse, chunk, embed, extract, link → WebSockets for live ingestion progress.<br><br>'+
+   '<b>AI architecture.</b> Structure-aware chunking with rich metadata; hybrid retrieval (full-text + vector, fused by reciprocal rank); cross-encoder reranking; decision extraction as schema-constrained structured output; a bounded tool-calling loop with graph traversal, search and fetch tools, each authorisation-checked; every answer cites chunk ids and abstains when evidence is weak.<br><br>'+
+   '<b>Hard parts worth talking about.</b> Indirect prompt injection through ingested documents; contradiction detection without drowning reviewers in false positives; keeping embedding cost bounded on re-ingest via content hashing; tenant isolation enforced at the repository layer so a missing filter is impossible; resumable ingestion when a worker dies mid-document.<br><br>'+
+   '<b>Testing and evaluation.</b> Unit tests on services with fake repositories, integration tests on a throwaway Postgres, a 40-question golden set scored for recall@k and faithfulness, and a CI gate that fails the build when answer faithfulness regresses.'},
+ {key:'p2-',name:'Hindsight FC',tag:'A decision-audit engine for football managers · ingestion at scale · expected-threat model · cohort retrieval · grounded narratives',
+  pitch:'Not a stats dashboard. Hindsight FC reconstructs the state of a match second by second, then judges the manager: for every substitution, formation change and tactical shift, it finds comparable historical match states, computes what typically happened next, and reports the value the decision added or destroyed — with a narrative that is only allowed to cite events that actually occurred.',
+  detail:'<b>Problem.</b> Football analysis judges decisions by their outcome, not by the information available at the time. A substitution that preceded a goal is called genius; the same substitution before a defeat is called panic. Outcome bias, at scale.<br><br>'+
+   '<b>Approach.</b> Ingest open event data, segment it into possession chains, and fit a grid-based expected-threat surface by iterating transition values to convergence. Represent match state as a vector: score margin, minute, red cards, territorial share, chain quality, fatigue proxy, opponent shape. For a given decision, retrieve a cohort of similar historical states, compute the distribution of subsequent threat swing, and report the manager’s delta against that baseline with a confidence band.<br><br>'+
+   '<b>Engineering meat.</b> Streaming ingestion of files too large to hold in memory, idempotent and resumable via checkpoints; bulk COPY loading; heavy precomputation on write so reads are fast; Redis caching of hot match aggregates; hybrid metadata-filtered vector search for cohort retrieval; a visualisation layer showing the threat surface and a decision timeline.<br><br>'+
+   '<b>AI layer.</b> A narrative generator constrained to cited event ids, with an automatic rejection pass for any claim not supported by retrieved events, plus a tool-calling “ask the match” interface that can query chains, players and cohorts.<br><br>'+
+   '<b>Tradeoffs you can defend.</b> Precompute versus query-time compute; cohort size versus similarity threshold; how to handle sparse states (a 3-0 lead with ten men in minute 80 has few neighbours) by widening features rather than inventing data; and why the system reports uncertainty instead of a single confident verdict.'}
+];
+let PROJBUILT=false;
+function renderProjects(){
+  const out=$('#projects');
+  if(PROJBUILT){
+    PROJECTS.forEach((p,n)=>{
+      const s=projStats(p.key), box=out.children[n];
+      box.querySelector('.bar i').style.width=s.pct+'%';
+      box.querySelector('.mstone').textContent='Milestones ('+s.done+'/'+s.total+' done)';
+      Array.prototype.forEach.call(box.querySelectorAll('.tl li'),(li,k)=>{
+        li.className = stRead(s.list[k].id).s==='completed'?'done':'';
+      });
+    });
+    return;
+  }
+  PROJBUILT=true; out.innerHTML='';
+  PROJECTS.forEach(p=>{
+    const s=projStats(p.key);
+    const box=el('div','proj');
+    box.appendChild(el('h4',null,p.name));
+    box.appendChild(el('div','tag2',p.tag));
+    box.appendChild(el('p',null,p.pitch));
+    box.appendChild(el('div','bar','<i style="width:'+s.pct+'%;background:var(--proj)"></i>'));
+    const d=el('details'); d.appendChild(el('summary',null,'Architecture, hard problems and testing strategy'));
+    d.appendChild(el('div','inner',p.detail)); box.appendChild(d);
+    const d2=el('details'); const sm=el('summary','mstone','Milestones ('+s.done+'/'+s.total+' done)'); d2.appendChild(sm);
+    const ul=el('ul','tl');
+    s.list.forEach(t=>{
+      const done=stRead(t.id).s==='completed';
+      const li=el('li',done?'done':'', '<b>'+esc(t.title.split('— ')[1]||t.title)+'</b><br>'+fmt(dateFor(SCH.placed[t.id])));
+      li.onclick=()=>openDay(SCH.placed[t.id],t.id); li.style.cursor='pointer';
+      ul.appendChild(li);
+    });
+    d2.appendChild(ul); box.appendChild(d2);
+    out.appendChild(box);
+  });
+}
+function renderBacklog(){
+  const out=$('#backlog'); out.innerHTML='';
+  const list=SCH.all.filter(t=>stRead(t.id).s==='backlog').sort((a,b)=>SCH.placed[a.id]-SCH.placed[b.id]);
+  if(!list.length){ out.appendChild(el('div','empty','Empty. Anything you push forward lands here with its new date.')); return }
+  list.forEach(t=>{
+    const i=SCH.placed[t.id];
+    const r=taskRow(t,i);
+    const m=r.querySelector('.meta'); m.innerHTML += ' <span style="opacity:.4">·</span> moved to <b>'+fmt(dateFor(i))+'</b>';
+    out.appendChild(r);
+  });
+}
+
+/* ---------- search + filters ---------- */
+function renderSearch(){
+  const f=filters, any=f.q||f.cat||f.kind||f.status;
+  $('#searchPanel').hidden=!any; if(!any) return;
+  const q=f.q.toLowerCase();
+  const hits=SCH.all.filter(t=>{
+    const s=stRead(t.id);
+    if(f.cat && t.cat!==f.cat) return false;
+    if(f.kind && t.kind!==f.kind) return false;
+    if(f.status && s.s!==f.status) return false;
+    if(!q) return true;
+    return (t.title+' '+t.cat+' '+t.what+' '+t.how+' '+t.practice+' '+t.interview).toLowerCase().indexOf(q)>-1;
+  }).sort((a,b)=>SCH.placed[a.id]-SCH.placed[b.id]);
+  const out=$('#searchOut'); out.innerHTML='';
+  out.appendChild(el('div','empty',hits.length+' task'+(hits.length===1?'':'s')+' match'));
+  hits.slice(0,60).forEach(t=>{
+    const i=SCH.placed[t.id]; const r=taskRow(t,i);
+    r.querySelector('.meta').innerHTML += ' <span style="opacity:.4">·</span> <b>'+fmt(dateFor(i))+'</b>';
+    out.appendChild(r);
+  });
+  if(hits.length>60) out.appendChild(el('div','empty','Showing the first 60. Narrow the search to see the rest.'));
+}
+
+/* ---------- weekly review ---------- */
+function openReview(){
+  const wk=Math.max(0,Math.min(11,Math.floor((selected!=null?selected:Math.min(TODAY,PLAN_DAYS-1))/7)));
+  const from=wk*7, to=from+6;
+  const items=[]; for(let i=from;i<=to;i++) if(SCH.days[i]) SCH.days[i].items.forEach(t=>items.push([t,i]));
+  const done=items.filter(x=>stRead(x[0].id).s==='completed');
+  const back=items.filter(x=>stRead(x[0].id).s==='backlog');
+  const open=items.filter(x=>['planned','inprogress'].indexOf(stRead(x[0].id).s)>-1);
+  const mins=done.reduce((a,x)=>a+x[0].min,0);
+  const hols=state.hol.filter(h=>h>=from&&h<=to).length;
+  const sc=scores();
+  const cats={}; items.forEach(x=>{cats[x[0].cat]=cats[x[0].cat]||{d:0,t:0}; cats[x[0].cat].t++; if(stRead(x[0].id).s==='completed')cats[x[0].cat].d++});
+  const ranked=Object.keys(cats).map(c=>[c,cats[c].d/cats[c].t,cats[c].t]).sort((a,b)=>b[1]-a[1]);
+  const weak=SCH.all.filter(t=>stRead(t.id).weak);
+  const nextWeek=[]; for(let i=to+1;i<=to+7;i++) if(SCH.days[i]) SCH.days[i].items.forEach(t=>nextWeek.push(t));
+  const iv=items.filter(x=>x[0].kind==='interview'); const ivDone=iv.filter(x=>stRead(x[0].id).s==='completed').length;
+
+  $('#dTitle').textContent='Week '+(wk+1)+' review';
+  $('#dSub').textContent=fmt(dateFor(from))+' – '+fmt(dateFor(to))+' · phase '+phaseOf(from).n;
+  const b=$('#dBody'); b.innerHTML='';
+  const nav=el('div','row');
+  const prev=el('button','btn','← Previous week'); prev.onclick=()=>{selected=Math.max(0,from-7); openReview()};
+  const next=el('button','btn','Next week →'); next.onclick=()=>{selected=Math.min(PLAN_DAYS-1,from+7); openReview()};
+  nav.appendChild(prev); nav.appendChild(next); b.appendChild(nav);
+
+  const sec=(title,html)=>{ const d=el('div','review'); d.style.marginBottom='11px'; d.innerHTML='<b>'+title+'</b>'+html; b.appendChild(d) };
+  sec('Throughput','<ul><li>'+done.length+' of '+items.length+' tasks completed ('+(items.length?Math.round(100*done.length/items.length):0)+'%)</li>'+
+    '<li>'+(mins/60).toFixed(1)+' hours logged · '+(items.length?(mins/Math.max(1,7-hols)/60).toFixed(1):0)+'h average per working day</li>'+
+    '<li>'+hols+' holiday'+(hols===1?'':'s')+' taken · '+back.length+' pushed to backlog · '+open.length+' still open</li></ul>');
+  sec('Completed', done.length? '<ul>'+done.map(x=>'<li>'+esc(x[0].title)+'</li>').join('')+'</ul>' : '<ul><li>Nothing logged yet for this week.</li></ul>');
+  sec('Missed or carried forward', (back.length+open.length)? '<ul>'+back.concat(open).map(x=>'<li>'+esc(x[0].title)+' → now '+fmt(dateFor(SCH.placed[x[0].id]))+'</li>').join('')+'</ul>' : '<ul><li>Clean week. Nothing outstanding.</li></ul>');
+  sec('Interview practice', iv.length? '<ul><li>'+ivDone+' of '+iv.length+' interview blocks done</li><li>Interview readiness score: '+(sc.Interview!=null?sc.Interview:0)+'/100</li></ul>' : '<ul><li>No interview block landed in this week.</li></ul>');
+  sec('Strongest this week', ranked.length? '<ul>'+ranked.slice(0,3).map(r=>'<li>'+r[0]+' — '+Math.round(r[1]*100)+'% complete</li>').join('')+'</ul>' : '<ul><li>—</li></ul>');
+  sec('Weakest — fix these first', (weak.length? '<ul>'+weak.slice(0,6).map(t=>'<li>'+esc(t.title)+' (flagged shaky · next revision '+fmt(dateFor(SCH.placed[t.id]))+')</li>').join('')+'</ul>'
+      : (ranked.length? '<ul>'+ranked.slice(-2).map(r=>'<li>'+r[0]+' — '+Math.round(r[1]*100)+'% complete</li>').join('')+'</ul>':'<ul><li>—</li></ul>')));
+  sec('Projects','<ul>'+PROJECTS.map(p=>{const s=projStats(p.key); return '<li>'+p.name+': '+s.done+'/'+s.total+' milestones ('+s.pct+'%)</li>'}).join('')+'</ul>');
+  sec('Next week — do these in this order', nextWeek.length? '<ul>'+nextWeek.slice(0,7).map(t=>'<li>'+esc(t.title)+'</li>').join('')+'</ul>' : '<ul><li>Plan finished. Switch to mock loops and project polish.</li></ul>');
+  $('#drawer').classList.add('on'); $('#scrim').classList.add('on');
+}
+
+/* ============================================================
+   TOOLBAR / EVENTS / INIT
+   ============================================================ */
+let _raf=null;
+function renderAll(){
+  if(_raf) return;
+  _raf=requestAnimationFrame(()=>{ _raf=null; _M=null;
+    renderStats(); renderCalendar(); renderScores(); renderProjects(); renderBacklog(); renderSearch();
+  });
+}
+
+document.querySelectorAll('#viewSeg button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#viewSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); view=b.dataset.view; renderCalendar();
+});
+$('#btnToday').onclick=()=>{ cursor=new Date(); renderCalendar(); if(TODAY>=0&&TODAY<HORIZON) openDay(TODAY) };
+$('#btnPrev').onclick=()=>{ cursor = view==='month'? new Date(cursor.getFullYear(),cursor.getMonth()-1,1) : addDays(cursor,-7); renderCalendar() };
+$('#btnNext').onclick=()=>{ cursor = view==='month'? new Date(cursor.getFullYear(),cursor.getMonth()+1,1) : addDays(cursor,7); renderCalendar() };
+$('#dClose').onclick=closeDrawer; $('#scrim').onclick=closeDrawer;
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDrawer() });
+$('#btnReview').onclick=openReview;
+$('#q').oninput=e=>{ filters.q=e.target.value.trim(); renderSearch() };
+$('#filterCat').onchange=e=>{ filters.cat=e.target.value; renderSearch() };
+$('#filterKind').onchange=e=>{ filters.kind=e.target.value; renderSearch() };
+$('#filterStatus').onchange=e=>{ filters.status=e.target.value; renderSearch() };
+$('#btnExport').onclick=()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='engineering-journey-'+iso(new Date())+'.json'; a.click(); URL.revokeObjectURL(a.href);
+  toast('Progress exported');
+};
+$('#btnImport').onclick=()=>$('#fileIn').click();
+$('#fileIn').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{
+    const j=JSON.parse(r.result);
+    if(!j||!j.tasks) throw 0;
+    state=j; state.hol=state.hol||[]; state.dayNote=state.dayNote||{};
+    save(); location.reload();
+  }catch(err){ toast('That file is not a valid progress export') } };
+  r.readAsText(f); e.target.value='';
+};
+$('#btnReset').onclick=()=>{
+  if(!confirm('Reset the plan? Completed tasks, backlog, holidays and notes are all cleared. Export first if you want a copy.')) return;
+  state=blankState(); save(); location.reload();
+};
+CATS.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; $('#filterCat').appendChild(o) });
+
+
+/* ============================================================
+   LOCK SCREEN
+   ============================================================ */
+const PASSCODE='1432';
+function unlock(){
+  $('#gate').classList.add('off'); $('#app').hidden=false;
+  if(TODAY>=0 && TODAY<HORIZON) cursor=dateFor(TODAY);
+  renderAll();
+  Sync.boot();
+  if(!hasLS) toast('Browser storage is blocked here — progress will not survive a refresh.');
+}
+function tryUnlock(){
+  const v=$('#pw').value.trim();
+  if(v===PASSCODE){ try{localStorage.setItem('ej.open','1')}catch(e){} unlock() }
+  else { $('#pw').classList.add('bad'); $('#pwErr').textContent='Wrong code.'; $('#pw').value=''; setTimeout(()=>$('#pw').classList.remove('bad'),600) }
+}
+$('#pwGo').onclick=tryUnlock;
+$('#pw').addEventListener('keydown',e=>{ if(e.key==='Enter') tryUnlock() });
+let alreadyOpen=false; try{ alreadyOpen=localStorage.getItem('ej.open')==='1' }catch(e){}
+if(alreadyOpen) unlock(); else setTimeout(()=>$('#pw').focus(),60);
+
+/* ============================================================
+   CLOUD SYNC — no server of your own, no account needed.
+   Provider A (default): jsonblob.com, anonymous JSON storage.
+   Provider B: a private GitHub gist (needs a token, most reliable).
+   Payload is AES-GCM encrypted with a key derived from the passcode.
+   ============================================================ */
+const Sync = (function(){
+  const CFGK='ej.sync.v1';
+  let cfg = (function(){ try{ return JSON.parse(localStorage.getItem(CFGK)||'null') }catch(e){ return null } })() || {mode:'off',id:null,token:null};
+  let keyP=null, busy=false, lastPush=0, timer=null;
+
+  function saveCfg(){ try{ localStorage.setItem(CFGK,JSON.stringify(cfg)) }catch(e){} }
+  function status(kind,text){
+    const d=$('#syncDot'), t=$('#syncTxt'); if(!d) return;
+    d.className='syncdot'+(kind?' '+kind:''); t.textContent=text;
+  }
+  const b64=u=>btoa(String.fromCharCode.apply(null,u));
+  const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+  function subtleOK(){ return typeof crypto!=='undefined' && crypto.subtle }
+  function key(){
+    if(!keyP){
+      const enc=new TextEncoder();
+      keyP=crypto.subtle.importKey('raw',enc.encode(PASSCODE),'PBKDF2',false,['deriveKey'])
+        .then(b=>crypto.subtle.deriveKey({name:'PBKDF2',salt:enc.encode('engineering-journey-v1'),iterations:100000,hash:'SHA-256'},b,{name:'AES-GCM',length:256},false,['encrypt','decrypt']));
+    }
+    return keyP;
+  }
+  async function pack(obj){
+    if(!subtleOK()) return {v:0,plain:obj};
+    const iv=crypto.getRandomValues(new Uint8Array(12));
+    const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await key(),new TextEncoder().encode(JSON.stringify(obj)));
+    return {v:1,iv:b64(iv),d:b64(new Uint8Array(ct)),at:obj.updatedAt||0};
+  }
+  async function unpack(box){
+    if(!box) return null;
+    if(box.v===0||box.plain) return box.plain;
+    if(!box.d) return null;
+    if(!subtleOK()) throw new Error('no crypto');
+    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(box.iv)},await key(),unb64(box.d));
+    return JSON.parse(new TextDecoder().decode(pt));
+  }
+
+  /* ---- providers ---- */
+  const JB='https://jsonblob.com/api/jsonBlob';
+  const providers={
+    jsonblob:{
+      async create(body){
+        const r=await fetch(JB,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body)});
+        if(!r.ok) throw new Error('create failed ('+r.status+')');
+        const loc=r.headers.get('X-jsonblob')||r.headers.get('Location')||'';
+        const id=(loc.split('/').pop()||'').trim();
+        if(!id) throw new Error('this browser cannot read the new blob id — use the gist option');
+        return id;
+      },
+      async get(id){ const r=await fetch(JB+'/'+id,{headers:{'Accept':'application/json'}}); if(r.status===404) return null; if(!r.ok) throw new Error('read failed ('+r.status+')'); return r.json() },
+      async put(id,body){ const r=await fetch(JB+'/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!r.ok) throw new Error('write failed ('+r.status+')') }
+    },
+    gist:{
+      hdr(){ return {'Authorization':'token '+cfg.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'} },
+      async create(body){
+        const r=await fetch('https://api.github.com/gists',{method:'POST',headers:this.hdr(),body:JSON.stringify({description:'engineering-journey',public:false,files:{'journey.json':{content:JSON.stringify(body)}}})});
+        if(!r.ok) throw new Error('gist create failed ('+r.status+')');
+        return (await r.json()).id;
+      },
+      async get(id){
+        const r=await fetch('https://api.github.com/gists/'+id,{headers:this.hdr(),cache:'no-store'});
+        if(r.status===404) return null; if(!r.ok) throw new Error('gist read failed ('+r.status+')');
+        const j=await r.json(), f=j.files&&j.files['journey.json']; if(!f) return null;
+        if(f.truncated&&f.raw_url) return (await fetch(f.raw_url)).json();
+        return JSON.parse(f.content);
+      },
+      async put(id,body){
+        const r=await fetch('https://api.github.com/gists/'+id,{method:'PATCH',headers:this.hdr(),body:JSON.stringify({files:{'journey.json':{content:JSON.stringify(body)}}})});
+        if(!r.ok) throw new Error('gist write failed ('+r.status+')');
+      }
+    }
+  };
+  function P(){ return providers[cfg.mode] }
+
+  function stamp(){ state.updatedAt=Date.now(); save(); }
+  function adopt(remote){
+    state=remote; state.hol=state.hol||[]; state.dayNote=state.dayNote||{}; state.tasks=state.tasks||{};
+    saveNow(); reschedule();
+  }
+
+  async function pull(quiet){
+    if(cfg.mode==='off'||!cfg.id) return;
+    busy=true; status('busy','Checking…');
+    try{
+      const box=await P().get(cfg.id);
+      const remote=await unpack(box);
+      if(remote && (remote.updatedAt||0) > (state.updatedAt||0)){ adopt(remote); status('ok','Synced'); if(!quiet) toast('Pulled newer progress from your other device') }
+      else if(remote && (state.updatedAt||0) > (remote.updatedAt||0)){ await push(true) }
+      else status('ok','Synced');
+    }catch(e){ status('err','Offline'); if(!quiet) toast('Sync unavailable: '+e.message) }
+    busy=false;
+  }
+  async function push(quiet){
+    if(cfg.mode==='off'||!cfg.id) return;
+    busy=true; status('busy','Saving…');
+    try{ await P().put(cfg.id, await pack(state)); lastPush=Date.now(); status('ok','Synced'); }
+    catch(e){ status('err','Offline'); if(!quiet) toast('Could not save to the cloud: '+e.message) }
+    busy=false;
+  }
+  function schedulePush(){
+    stamp();
+    if(cfg.mode==='off'||!cfg.id) return;
+    clearTimeout(timer); timer=setTimeout(()=>push(true),1500);
+  }
+  async function connect(mode,token){
+    cfg.mode=mode; cfg.token=token||null;
+    status('busy','Connecting…');
+    stamp();
+    saveNow();
+    cfg.id=await P().create(await pack(state));
+    saveCfg(); setHash(); status('ok','Synced');
+    return cfg.id;
+  }
+  function setHash(){ if(cfg.id&&cfg.mode!=='off'){ try{ history.replaceState(null,'','#'+cfg.mode+':'+cfg.id) }catch(e){} } }
+  function fromHash(){
+    const h=(location.hash||'').replace(/^#/,'');
+    const bits=h.split(':');
+    if(bits.length===2 && (bits[0]==='jsonblob'||bits[0]==='gist') && bits[1]){
+      if(cfg.id!==bits[1]||cfg.mode!==bits[0]){ cfg.mode=bits[0]; cfg.id=bits[1]; saveCfg(); return true }
+    }
+    return false;
+  }
+
+  function boot(){
+    fromHash();
+    if(cfg.mode==='off'||!cfg.id){ status('','Sync off'); return }
+    setHash(); pull(true);
+    window.addEventListener('focus',()=>{ if(!busy && Date.now()-lastPush>4000) pull(true) });
+    setInterval(()=>{ if(!busy && !document.hidden) pull(true) },90000);
+  }
+
+  /* ---- setup dialog in the drawer ---- */
+  function open(){
+    $('#dTitle').textContent='Sync across devices';
+    $('#dSub').textContent = cfg.mode==='off'? 'Not connected — this browser only' : 'Connected via '+cfg.mode+' · id '+cfg.id;
+    const b=$('#dBody'); b.innerHTML='';
+    const box=el('div','setup');
+    box.innerHTML='<div class="review"><b>How this works.</b> GitHub Pages only serves files, so the plan keeps its state in a tiny anonymous JSON store instead. Your progress is encrypted in the browser with a key derived from your passcode before it leaves the page, and the link in your address bar carries the store id — bookmark it and every device opens the same plan.</div>';
+    b.appendChild(box);
+
+    const mk=(title,desc,label,fn)=>{
+      const d=el('div','review'); d.style.marginTop='11px';
+      d.innerHTML='<b>'+title+'</b><div style="font-size:12.5px;margin-top:5px">'+desc+'</div>';
+      const btn=el('button','btn',label); btn.style.marginTop='10px'; btn.onclick=()=>fn(d); d.appendChild(btn); b.appendChild(d); return d;
+    };
+
+    if(cfg.mode==='off'){
+      mk('Option 1 — one click, no account','Creates an anonymous encrypted store on jsonblob.com and links this browser to it.','Turn on sync',async d=>{
+        try{ const id=await connect('jsonblob'); d.innerHTML='<b>Sync is on.</b><div style="font-size:12.5px;margin-top:5px">Store id <code>'+id+'</code>. Open this page on your phone using the full URL in the address bar (it now ends in <code>#jsonblob:'+id+'</code>) and it will load the same progress.</div>'; toast('Sync on') }
+        catch(e){ toast('Could not connect: '+e.message) }
+      });
+      const g=el('div','setup');
+      g.innerHTML='<div class="review" style="margin-top:11px"><b>Option 2 — private GitHub gist</b><div style="font-size:12.5px;margin-top:5px">More reliable and the data stays in your own GitHub account. Create a token at github.com/settings/tokens with only the <code>gist</code> scope, then paste it here. It is stored in this browser only.</div><label>Token</label><input id="ghTok" type="password" placeholder="ghp_…"><label>Existing gist id (leave blank to create one)</label><input id="ghId" placeholder="optional"></div>';
+      b.appendChild(g);
+      const gb=el('button','btn','Connect gist'); gb.style.marginTop='10px';
+      gb.onclick=async ()=>{
+        const t=$('#ghTok').value.trim(), id=$('#ghId').value.trim();
+        if(!t) return toast('Paste a token first');
+        try{
+          if(id){ cfg.mode='gist'; cfg.token=t; cfg.id=id; saveCfg(); setHash(); await pull(); }
+          else { await connect('gist',t); }
+          toast('Gist sync on'); open();
+        }catch(e){ toast('Could not connect: '+e.message) }
+      };
+      b.appendChild(gb);
+    } else {
+      const info=el('div','review'); info.style.marginTop='11px';
+      info.innerHTML='<b>Connected.</b><div style="font-size:12.5px;margin-top:5px">Mode <code>'+cfg.mode+'</code>, id <code>'+cfg.id+'</code>. To add another device, open this exact link there:<br><code style="word-break:break-all">'+esc(location.href)+'</code></div>';
+      b.appendChild(info);
+      const r=el('div','row'); r.style.marginTop='11px';
+      const a1=el('button','btn','Sync now'); a1.onclick=()=>pull();
+      const a2=el('button','btn','Force upload this device'); a2.onclick=()=>{ stamp(); push() };
+      const a3=el('button','btn','Disconnect'); a3.onclick=()=>{ cfg={mode:'off',id:null,token:null}; saveCfg(); status('','Sync off'); try{history.replaceState(null,'',location.pathname)}catch(e){} open() };
+      r.appendChild(a1); r.appendChild(a2); r.appendChild(a3); b.appendChild(r);
+    }
+    $('#drawer').classList.add('on'); $('#scrim').classList.add('on');
+  }
+
+  return {boot,open,schedulePush,pull,push,status:()=>cfg.mode};
+})();
+$('#btnSync').onclick=()=>Sync.open();
+
+/* every local change also queues a cloud write */
+const _resched=reschedule;
+reschedule=function(){ _resched(); Sync.schedulePush() };
+
+
+
+</script>
+</body>
+</html>
