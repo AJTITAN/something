@@ -1174,7 +1174,7 @@ function tryUnlock(){
 $('#pwGo').onclick=tryUnlock;
 $('#pw').addEventListener('keydown',e=>{ if(e.key==='Enter') tryUnlock() });
 let alreadyOpen=false; try{ alreadyOpen=localStorage.getItem('ej.open')==='1' }catch(e){}
-if(alreadyOpen) unlock(); else setTimeout(()=>$('#pw').focus(),60);
+if(alreadyOpen) setTimeout(unlock,0); else setTimeout(()=>$('#pw').focus(),60);
 
 /* ============================================================
    CLOUD SYNC — no server of your own, no account needed.
