@@ -1174,9 +1174,7 @@ function tryUnlock(){
 $('#pwGo').onclick=tryUnlock;
 $('#pw').addEventListener('keydown',e=>{ if(e.key==='Enter') tryUnlock() });
 let alreadyOpen=false; try{ alreadyOpen=localStorage.getItem('ej.open')==='1' }catch(e){}
-if(!alreadyOpen) setTimeout(()=>$('#pw').focus(),60);
-/* NOTE: when already unlocked we cannot call unlock() here — it calls Sync.boot(),
-   and Sync is a const declared further down. The call happens at the end of this script. */
+if(alreadyOpen) unlock(); else setTimeout(()=>$('#pw').focus(),60);
 
 /* ============================================================
    CLOUD SYNC — no server of your own, no account needed.
@@ -1184,6 +1182,10 @@ if(!alreadyOpen) setTimeout(()=>$('#pw').focus(),60);
    Provider B: a private GitHub gist (needs a token, most reliable).
    Payload is AES-GCM encrypted with a key derived from the passcode.
    ============================================================ */
+/* Your own backend (Cloudflare Worker + D1). Paste the deploy URL here,
+   no trailing slash. Leave empty to hide the option. */
+const CF_API='https://ej-sync.ajtitan-blog.workers.dev';
+
 const Sync = (function(){
   const CFGK='ej.sync.v1';
   let cfg = (function(){ try{ return JSON.parse(localStorage.getItem(CFGK)||'null') }catch(e){ return null } })() || {mode:'off',id:null,token:null};
@@ -1224,37 +1226,31 @@ const Sync = (function(){
   const JB='https://jsonblob.com/api/jsonBlob';
   const providers={
     jsonblob:{
-      why(s){
-        if(s===403) return 'jsonblob refused the request (403). Its edge is blocking browser calls from this page/network. Use the gist option or your own endpoint instead.';
-        if(s===429) return 'jsonblob is rate-limiting this network (429). Try again later or use the gist option.';
-        return 'HTTP '+s;
-      },
       async create(body){
         const r=await fetch(JB,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body)});
-        if(!r.ok) throw new Error(this.why(r.status));
+        if(!r.ok) throw new Error('create failed ('+r.status+')');
         const loc=r.headers.get('X-jsonblob')||r.headers.get('Location')||'';
         const id=(loc.split('/').pop()||'').trim();
         if(!id) throw new Error('this browser cannot read the new blob id — use the gist option');
         return id;
       },
-      async get(id){ const r=await fetch(JB+'/'+id,{headers:{'Accept':'application/json'}}); if(r.status===404) return null; if(!r.ok) throw new Error(this.why(r.status)); return r.json() },
-      async put(id,body){ const r=await fetch(JB+'/'+id,{method:'PUT',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body)}); if(!r.ok) throw new Error(this.why(r.status)) }
+      async get(id){ const r=await fetch(JB+'/'+id,{headers:{'Accept':'application/json'}}); if(r.status===404) return null; if(!r.ok) throw new Error('read failed ('+r.status+')'); return r.json() },
+      async put(id,body){ const r=await fetch(JB+'/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!r.ok) throw new Error('write failed ('+r.status+')') }
     },
-    /* Your own single-document endpoint: GET returns the doc, PUT replaces it.
-       Works with a Cloudflare Worker + KV, a Google Apps Script web app, Deno Deploy,
-       or any host you control that sends permissive CORS headers. cfg.id IS the URL. */
-    custom:{
-      hdr(){ const h={'Content-Type':'application/json','Accept':'application/json'}; if(cfg.token) h['Authorization']='Bearer '+cfg.token; return h },
-      async create(body){ await this.put(cfg.id,body); return cfg.id },
+    cf:{
+      base(){ const b=(cfg.api||CF_API||'').replace(/\/+$/,''); if(!b) throw new Error('no backend URL set'); return b },
+      async create(body){
+        const r=await fetch(this.base()+'/blob',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        if(!r.ok) throw new Error('create failed ('+r.status+')');
+        return (await r.json()).id;
+      },
       async get(id){
-        const r=await fetch(id,{headers:this.hdr(),cache:'no-store'});
-        if(r.status===404||r.status===204) return null;
-        if(!r.ok) throw new Error('read failed ('+r.status+')');
-        const t=(await r.text()).trim(); if(!t) return null;
-        return JSON.parse(t);
+        const r=await fetch(this.base()+'/blob/'+id,{cache:'no-store'});
+        if(r.status===404) return null; if(!r.ok) throw new Error('read failed ('+r.status+')');
+        return r.json();
       },
       async put(id,body){
-        const r=await fetch(id,{method:'PUT',headers:this.hdr(),body:JSON.stringify(body)});
+        const r=await fetch(this.base()+'/blob/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         if(!r.ok) throw new Error('write failed ('+r.status+')');
       }
     },
@@ -1310,32 +1306,22 @@ const Sync = (function(){
     if(cfg.mode==='off'||!cfg.id) return;
     clearTimeout(timer); timer=setTimeout(()=>push(true),1500);
   }
-  async function connect(mode,token,id){
-    const prev={mode:cfg.mode,id:cfg.id,token:cfg.token};
-    cfg.mode=mode; cfg.token=token||null; cfg.id=id||null;
+  async function connect(mode,token){
+    cfg.mode=mode; cfg.token=token||null;
     status('busy','Connecting…');
     stamp();
     saveNow();
-    try{ cfg.id=await P().create(await pack(state)); }
-    catch(e){ cfg=prev; saveCfg(); status(cfg.mode==='off'?'':'err', cfg.mode==='off'?'Sync off':'Offline'); throw e }
+    cfg.id=await P().create(await pack(state));
     saveCfg(); setHash(); status('ok','Synced');
     return cfg.id;
   }
-  const b64u=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-  const unb64u=s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/'))));
-  function setHash(){
-    if(!cfg.id||cfg.mode==='off') return;
-    const frag = cfg.mode==='custom' ? 'custom:'+b64u(cfg.id) : cfg.mode+':'+cfg.id;
-    try{ history.replaceState(null,'','#'+frag) }catch(e){}
-  }
+  function setHash(){ if(cfg.id&&cfg.mode!=='off'){ try{ history.replaceState(null,'','#'+cfg.mode+':'+cfg.id) }catch(e){} } }
   function fromHash(){
     const h=(location.hash||'').replace(/^#/,'');
-    const i=h.indexOf(':'); if(i<1) return false;
-    const mode=h.slice(0,i); let id=h.slice(i+1);
-    if(!id) return false;
-    if(mode==='custom'){ try{ id=unb64u(id) }catch(e){ return false } }
-    else if(mode!=='jsonblob'&&mode!=='gist') return false;
-    if(cfg.id!==id||cfg.mode!==mode){ cfg.mode=mode; cfg.id=id; saveCfg(); return true }
+    const bits=h.split(':');
+    if(bits.length===2 && (bits[0]==='jsonblob'||bits[0]==='gist'||bits[0]==='cf') && bits[1]){
+      if(cfg.id!==bits[1]||cfg.mode!==bits[0]){ cfg.mode=bits[0]; cfg.id=bits[1]; saveCfg(); return true }
+    }
     return false;
   }
 
@@ -1363,8 +1349,31 @@ const Sync = (function(){
     };
 
     if(cfg.mode==='off'){
+      const cfBox=el('div','setup');
+      cfBox.innerHTML='<div class="review" style="margin-top:11px"><b>Option 1 — your own backend (recommended)</b><div style="font-size:12.5px;margin-top:5px">A Cloudflare Worker you deploy once. Always on, never paused, 100k requests a day free. Your data sits in your own account.</div>'+
+        (CF_API?'':'<label>Worker URL</label><input id="cfUrl" placeholder="https://ej-sync.you.workers.dev">')+
+        '<label>Existing store id (leave blank to create one)</label><input id="cfId" placeholder="optional"></div>';
+      b.appendChild(cfBox);
+      const cfb=el('button','btn','Connect backend'); cfb.style.marginTop='10px';
+      cfb.onclick=async ()=>{
+        const u=(CF_API || (($('#cfUrl')&&$('#cfUrl').value)||'')).trim().replace(/\/+$/,'');
+        const id=(($('#cfId')&&$('#cfId').value)||'').trim();
+        if(!u) return toast('Paste your Worker URL first');
+        cfg.api=u; saveCfg();
+        try{
+          if(id){ cfg.mode='cf'; cfg.id=id; saveCfg(); setHash(); await pull(); }
+          else { await connect('cf'); }
+          toast('Backend sync on'); open();
+        }catch(e){ toast('Could not connect: '+e.message) }
+      };
+      b.appendChild(cfb);
+
+      mk('Option 2 — one click, no account','Creates an anonymous encrypted store on jsonblob.com and links this browser to it.','Turn on sync',async d=>{
+        try{ const id=await connect('jsonblob'); d.innerHTML='<b>Sync is on.</b><div style="font-size:12.5px;margin-top:5px">Store id <code>'+id+'</code>. Open this page on your phone using the full URL in the address bar (it now ends in <code>#jsonblob:'+id+'</code>) and it will load the same progress.</div>'; toast('Sync on') }
+        catch(e){ toast('Could not connect: '+e.message) }
+      });
       const g=el('div','setup');
-      g.innerHTML='<div class="review" style="margin-top:11px"><b>Option 1 — private GitHub gist (recommended)</b><div style="font-size:12.5px;margin-top:5px">Reliable, CORS-clean, and the data stays in your own GitHub account. Create a token at github.com/settings/tokens with only the <code>gist</code> scope, then paste it here. It is stored in this browser only. On a second device, paste the same token and the gist id.</div><label>Token</label><input id="ghTok" type="password" placeholder="ghp_…"><label>Existing gist id (leave blank to create one)</label><input id="ghId" placeholder="optional"></div>';
+      g.innerHTML='<div class="review" style="margin-top:11px"><b>Option 3 — private GitHub gist</b><div style="font-size:12.5px;margin-top:5px">More reliable and the data stays in your own GitHub account. Create a token at github.com/settings/tokens with only the <code>gist</code> scope, then paste it here. It is stored in this browser only.</div><label>Token</label><input id="ghTok" type="password" placeholder="ghp_…"><label>Existing gist id (leave blank to create one)</label><input id="ghId" placeholder="optional"></div>';
       b.appendChild(g);
       const gb=el('button','btn','Connect gist'); gb.style.marginTop='10px';
       gb.onclick=async ()=>{
@@ -1377,30 +1386,9 @@ const Sync = (function(){
         }catch(e){ toast('Could not connect: '+e.message) }
       };
       b.appendChild(gb);
-
-      const c=el('div','setup');
-      c.innerHTML='<div class="review" style="margin-top:11px"><b>Option 2 — your own endpoint</b><div style="font-size:12.5px;margin-top:5px">Any URL that answers <code>GET</code> with the stored document and accepts <code>PUT</code> to replace it — a Cloudflare Worker + KV, a Deno Deploy script, an Apps Script web app. It must send <code>Access-Control-Allow-Origin</code>, <code>Access-Control-Allow-Methods: GET,PUT,OPTIONS</code> and <code>Access-Control-Allow-Headers: Content-Type,Authorization</code>, and answer the <code>OPTIONS</code> preflight. The token, if you set one, is sent as a bearer header and never goes in the URL.</div><label>Endpoint URL</label><input id="cuUrl" placeholder="https://plan.you.workers.dev/journey"><label>Token (optional)</label><input id="cuTok" type="password" placeholder="optional"></div>';
-      b.appendChild(c);
-      const cb=el('button','btn','Connect endpoint'); cb.style.marginTop='10px';
-      cb.onclick=async ()=>{
-        const u=$('#cuUrl').value.trim(), t=$('#cuTok').value.trim();
-        if(!/^https:\/\//.test(u)) return toast('Enter a full https:// URL');
-        try{
-          cfg.mode='custom'; cfg.token=t||null; cfg.id=u; saveCfg(); setHash();
-          const existing=await providers.custom.get(u);
-          if(existing) await pull(); else await push();
-          toast('Endpoint sync on'); open();
-        }catch(e){ cfg={mode:'off',id:null,token:null}; saveCfg(); toast('Could not connect: '+e.message) }
-      };
-      b.appendChild(cb);
-
-      mk('Option 3 — anonymous jsonblob.com','One click, no account, but the service frequently blocks browser requests (403) and rate-limits shared networks. Try it; fall back to the options above if it fails.','Try jsonblob',async d=>{
-        try{ const id=await connect('jsonblob'); d.innerHTML='<b>Sync is on.</b><div style="font-size:12.5px;margin-top:5px">Store id <code>'+id+'</code>. Open this page on your phone using the full URL in the address bar (it now ends in <code>#jsonblob:'+id+'</code>) and it will load the same progress.</div>'; toast('Sync on') }
-        catch(e){ toast('Could not connect: '+e.message) }
-      });
     } else {
       const info=el('div','review'); info.style.marginTop='11px';
-      info.innerHTML='<b>Connected.</b><div style="font-size:12.5px;margin-top:5px">Mode <code>'+cfg.mode+'</code>, id <code>'+esc(String(cfg.id))+'</code>. To add another device, open this exact link there:<br><code style="word-break:break-all">'+esc(location.href)+'</code>'+(cfg.token?'<br><br>This mode uses a token. The link does not carry it — paste the same token on the other device once.':'')+'</div>';
+      info.innerHTML='<b>Connected.</b><div style="font-size:12.5px;margin-top:5px">Mode <code>'+cfg.mode+'</code>, id <code>'+cfg.id+'</code>. To add another device, open this exact link there:<br><code style="word-break:break-all">'+esc(location.href)+'</code></div>';
       b.appendChild(info);
       const r=el('div','row'); r.style.marginTop='11px';
       const a1=el('button','btn','Sync now'); a1.onclick=()=>pull();
@@ -1418,9 +1406,6 @@ $('#btnSync').onclick=()=>Sync.open();
 /* every local change also queues a cloud write */
 const _resched=reschedule;
 reschedule=function(){ _resched(); Sync.schedulePush() };
-
-/* Everything the app depends on is now defined, so it is safe to auto-open. */
-if(alreadyOpen) unlock();
 
 
 
