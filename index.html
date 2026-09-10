@@ -237,6 +237,7 @@ details .inner b{color:var(--ink)}
     <button class="btn" id="btnExport">Export</button>
     <button class="btn" id="btnImport">Import</button>
     <button class="btn" id="btnReset">Reset plan</button>
+    <button class="btn" id="btnLock">Log out</button>
     <input type="file" id="fileIn" accept="application/json" style="display:none">
   </div>
 
@@ -1152,6 +1153,16 @@ $('#btnReset').onclick=()=>{
   if(!confirm('Reset the plan? Completed tasks, backlog, holidays and notes are all cleared. Export first if you want a copy.')) return;
   state=blankState(); save(); location.reload();
 };
+/* Log out — flushes anything unsaved to the backend, forgets the unlocked flag
+   and any legacy sync config, then returns to the gate. Progress is untouched:
+   it lives in the store, so logging back in on any device restores it. */
+$('#btnLock').onclick=async ()=>{
+  const btn=$('#btnLock'); btn.disabled=true; btn.textContent='Saving…';
+  saveNow();
+  try{ await Sync.push(true) }catch(e){}
+  try{ localStorage.removeItem('ej.open'); localStorage.removeItem('ej.sync.v1') }catch(e){}
+  location.replace(location.pathname);
+};
 CATS.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; $('#filterCat').appendChild(o) });
 
 
@@ -1177,21 +1188,31 @@ let alreadyOpen=false; try{ alreadyOpen=localStorage.getItem('ej.open')==='1' }c
 if(alreadyOpen) setTimeout(unlock,0); else setTimeout(()=>$('#pw').focus(),60);
 
 /* ============================================================
-   CLOUD SYNC — no server of your own, no account needed.
-   Provider A (default): jsonblob.com, anonymous JSON storage.
-   Provider B: a private GitHub gist (needs a token, most reliable).
-   Payload is AES-GCM encrypted with a key derived from the passcode.
+   CLOUD SYNC — always on, pointed at your own Cloudflare Worker + D1.
+   One fixed store id, shared by every device that opens this page.
+   Payload is AES-GCM encrypted with a key derived from the passcode,
+   so the backend only ever stores ciphertext.
    ============================================================ */
-/* Your own backend (Cloudflare Worker + D1). Paste the deploy URL here,
-   no trailing slash. Leave empty to hide the option. */
+/* Your backend (Cloudflare Worker + D1) and the one store every device uses.
+   Both are fixed here — sync is always on and cannot be switched off from the UI. */
 const CF_API='https://ej-sync.ajtitan-blog.workers.dev';
+const CF_STORE='32fb0a92-1d40-42b7-b9b9-47ff6d363535';
 
 const Sync = (function(){
   const CFGK='ej.sync.v1';
-  let cfg = (function(){ try{ return JSON.parse(localStorage.getItem(CFGK)||'null') }catch(e){ return null } })() || {mode:'off',id:null,token:null};
+  try{ localStorage.removeItem(CFGK) }catch(e){}   /* drop any legacy jsonblob/gist config */
+  const cfg = {mode:'cf', id:CF_STORE, api:CF_API, token:null};
   let keyP=null, busy=false, lastPush=0, timer=null;
+  let applying=false, remoteHasData=false;
+  /* how much real work a state object contains — used to refuse destructive writes */
+  function weight(s){
+    if(!s) return -1;
+    let n=0; const t=s.tasks||{};
+    for(const k in t){ const x=t[k]; if(x && ((x.s && x.s!=='planned') || x.weak || x.note)) n++ }
+    return n + ((s.hol||[]).length) + Object.keys(s.dayNote||{}).length;
+  }
 
-  function saveCfg(){ try{ localStorage.setItem(CFGK,JSON.stringify(cfg)) }catch(e){} }
+  function saveCfg(){}   /* nothing to persist — the config is baked into the file */
   function status(kind,text){
     const d=$('#syncDot'), t=$('#syncTxt'); if(!d) return;
     d.className='syncdot'+(kind?' '+kind:''); t.textContent=text;
@@ -1222,23 +1243,10 @@ const Sync = (function(){
     return JSON.parse(new TextDecoder().decode(pt));
   }
 
-  /* ---- providers ---- */
-  const JB='https://jsonblob.com/api/jsonBlob';
+  /* ---- provider: your Worker ---- */
   const providers={
-    jsonblob:{
-      async create(body){
-        const r=await fetch(JB,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body)});
-        if(!r.ok) throw new Error('create failed ('+r.status+')');
-        const loc=r.headers.get('X-jsonblob')||r.headers.get('Location')||'';
-        const id=(loc.split('/').pop()||'').trim();
-        if(!id) throw new Error('this browser cannot read the new blob id — use the gist option');
-        return id;
-      },
-      async get(id){ const r=await fetch(JB+'/'+id,{headers:{'Accept':'application/json'}}); if(r.status===404) return null; if(!r.ok) throw new Error('read failed ('+r.status+')'); return r.json() },
-      async put(id,body){ const r=await fetch(JB+'/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!r.ok) throw new Error('write failed ('+r.status+')') }
-    },
     cf:{
-      base(){ const b=(cfg.api||CF_API||'').replace(/\/+$/,''); if(!b) throw new Error('no backend URL set'); return b },
+      base(){ const b=(CF_API||'').replace(/\/+$/,''); if(!b) throw new Error('CF_API is not set in this file'); return b },
       async create(body){
         const r=await fetch(this.base()+'/blob',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         if(!r.ok) throw new Error('create failed ('+r.status+')');
@@ -1253,149 +1261,79 @@ const Sync = (function(){
         const r=await fetch(this.base()+'/blob/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         if(!r.ok) throw new Error('write failed ('+r.status+')');
       }
-    },
-    gist:{
-      hdr(){ return {'Authorization':'token '+cfg.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'} },
-      async create(body){
-        const r=await fetch('https://api.github.com/gists',{method:'POST',headers:this.hdr(),body:JSON.stringify({description:'engineering-journey',public:false,files:{'journey.json':{content:JSON.stringify(body)}}})});
-        if(!r.ok) throw new Error('gist create failed ('+r.status+')');
-        return (await r.json()).id;
-      },
-      async get(id){
-        const r=await fetch('https://api.github.com/gists/'+id,{headers:this.hdr(),cache:'no-store'});
-        if(r.status===404) return null; if(!r.ok) throw new Error('gist read failed ('+r.status+')');
-        const j=await r.json(), f=j.files&&j.files['journey.json']; if(!f) return null;
-        if(f.truncated&&f.raw_url) return (await fetch(f.raw_url)).json();
-        return JSON.parse(f.content);
-      },
-      async put(id,body){
-        const r=await fetch('https://api.github.com/gists/'+id,{method:'PATCH',headers:this.hdr(),body:JSON.stringify({files:{'journey.json':{content:JSON.stringify(body)}}})});
-        if(!r.ok) throw new Error('gist write failed ('+r.status+')');
-      }
     }
   };
   function P(){ return providers[cfg.mode] }
 
   function stamp(){ state.updatedAt=Date.now(); save(); }
   function adopt(remote){
+    applying=true;
     state=remote; state.hol=state.hol||[]; state.dayNote=state.dayNote||{}; state.tasks=state.tasks||{};
     saveNow(); reschedule();
+    applying=false;
   }
 
   async function pull(quiet){
-    if(cfg.mode==='off'||!cfg.id) return;
     busy=true; status('busy','Checking…');
     try{
       const box=await P().get(cfg.id);
       const remote=await unpack(box);
-      if(remote && (remote.updatedAt||0) > (state.updatedAt||0)){ adopt(remote); status('ok','Synced'); if(!quiet) toast('Pulled newer progress from your other device') }
-      else if(remote && (state.updatedAt||0) > (remote.updatedAt||0)){ await push(true) }
-      else status('ok','Synced');
+      if(!remote){
+        remoteHasData=false;
+        if(weight(state)>0) await push(true); else status('ok','Synced');
+      } else {
+        const rW=weight(remote), lW=weight(state);
+        const rT=remote.updatedAt||0, lT=state.updatedAt||0;
+        remoteHasData = rW>0;
+        if(rT>lT || (rW>0 && lW===0)){
+          adopt(remote); status('ok','Synced');
+          if(!quiet) toast('Pulled newer progress from your other device');
+        } else if(lT>rT && !(lW===0 && rW>0)){
+          await push(true);
+        } else status('ok','Synced');
+      }
     }catch(e){ status('err','Offline'); if(!quiet) toast('Sync unavailable: '+e.message) }
     busy=false;
   }
   async function push(quiet){
-    if(cfg.mode==='off'||!cfg.id) return;
+    if(weight(state)===0 && remoteHasData){ status('ok','Synced'); if(!quiet) toast('Nothing to upload yet — this device is still empty'); return }
     busy=true; status('busy','Saving…');
-    try{ await P().put(cfg.id, await pack(state)); lastPush=Date.now(); status('ok','Synced'); }
+    try{ await P().put(cfg.id, await pack(state)); remoteHasData = weight(state)>0; lastPush=Date.now(); status('ok','Synced'); }
     catch(e){ status('err','Offline'); if(!quiet) toast('Could not save to the cloud: '+e.message) }
     busy=false;
   }
   function schedulePush(){
+    if(applying) return;
     stamp();
-    if(cfg.mode==='off'||!cfg.id) return;
     clearTimeout(timer); timer=setTimeout(()=>push(true),1500);
   }
-  async function connect(mode,token){
-    cfg.mode=mode; cfg.token=token||null;
-    status('busy','Connecting…');
-    stamp();
-    saveNow();
-    cfg.id=await P().create(await pack(state));
-    saveCfg(); setHash(); status('ok','Synced');
-    return cfg.id;
-  }
-  function setHash(){ if(cfg.id&&cfg.mode!=='off'){ try{ history.replaceState(null,'','#'+cfg.mode+':'+cfg.id) }catch(e){} } }
-  function fromHash(){
-    const h=(location.hash||'').replace(/^#/,'');
-    const bits=h.split(':');
-    if(bits.length===2 && (bits[0]==='jsonblob'||bits[0]==='gist'||bits[0]==='cf') && bits[1]){
-      if(cfg.id!==bits[1]||cfg.mode!==bits[0]){ cfg.mode=bits[0]; cfg.id=bits[1]; saveCfg(); return true }
-    }
-    return false;
-  }
-
+  /* the store is fixed; there is nothing to connect and nothing to fork */
+  function setHash(){ try{ if(location.hash) history.replaceState(null,'',location.pathname) }catch(e){} }
   function boot(){
-    fromHash();
-    if(cfg.mode==='off'||!cfg.id){ status('','Sync off'); return }
-    setHash(); pull(true);
+    setHash();
+    pull(true);
     window.addEventListener('focus',()=>{ if(!busy && Date.now()-lastPush>4000) pull(true) });
     setInterval(()=>{ if(!busy && !document.hidden) pull(true) },90000);
   }
 
-  /* ---- setup dialog in the drawer ---- */
+  /* ---- status panel in the drawer ---- */
   function open(){
-    $('#dTitle').textContent='Sync across devices';
-    $('#dSub').textContent = cfg.mode==='off'? 'Not connected — this browser only' : 'Connected via '+cfg.mode+' · id '+cfg.id;
+    $('#dTitle').textContent='Sync';
+    $('#dSub').textContent='Always on — your Cloudflare backend';
     const b=$('#dBody'); b.innerHTML='';
     const box=el('div','setup');
-    box.innerHTML='<div class="review"><b>How this works.</b> GitHub Pages only serves files, so the plan keeps its state in a tiny anonymous JSON store instead. Your progress is encrypted in the browser with a key derived from your passcode before it leaves the page, and the link in your address bar carries the store id — bookmark it and every device opens the same plan.</div>';
+    box.innerHTML='<div class="review"><b>How this works.</b> Every device running this page reads and writes the same store on your own Worker. Progress is encrypted in the browser with a key derived from your passcode before it is uploaded, so the server only ever holds ciphertext. There is nothing to connect and nothing to switch off — open the page anywhere and it is the same plan.</div>';
     b.appendChild(box);
-
-    const mk=(title,desc,label,fn)=>{
-      const d=el('div','review'); d.style.marginTop='11px';
-      d.innerHTML='<b>'+title+'</b><div style="font-size:12.5px;margin-top:5px">'+desc+'</div>';
-      const btn=el('button','btn',label); btn.style.marginTop='10px'; btn.onclick=()=>fn(d); d.appendChild(btn); b.appendChild(d); return d;
-    };
-
-    if(cfg.mode==='off'){
-      const cfBox=el('div','setup');
-      cfBox.innerHTML='<div class="review" style="margin-top:11px"><b>Option 1 — your own backend (recommended)</b><div style="font-size:12.5px;margin-top:5px">A Cloudflare Worker you deploy once. Always on, never paused, 100k requests a day free. Your data sits in your own account.</div>'+
-        (CF_API?'':'<label>Worker URL</label><input id="cfUrl" placeholder="https://ej-sync.you.workers.dev">')+
-        '<label>Existing store id (leave blank to create one)</label><input id="cfId" placeholder="optional"></div>';
-      b.appendChild(cfBox);
-      const cfb=el('button','btn','Connect backend'); cfb.style.marginTop='10px';
-      cfb.onclick=async ()=>{
-        const u=(CF_API || (($('#cfUrl')&&$('#cfUrl').value)||'')).trim().replace(/\/+$/,'');
-        const id=(($('#cfId')&&$('#cfId').value)||'').trim();
-        if(!u) return toast('Paste your Worker URL first');
-        cfg.api=u; saveCfg();
-        try{
-          if(id){ cfg.mode='cf'; cfg.id=id; saveCfg(); setHash(); await pull(); }
-          else { await connect('cf'); }
-          toast('Backend sync on'); open();
-        }catch(e){ toast('Could not connect: '+e.message) }
-      };
-      b.appendChild(cfb);
-
-      mk('Option 2 — one click, no account','Creates an anonymous encrypted store on jsonblob.com and links this browser to it.','Turn on sync',async d=>{
-        try{ const id=await connect('jsonblob'); d.innerHTML='<b>Sync is on.</b><div style="font-size:12.5px;margin-top:5px">Store id <code>'+id+'</code>. Open this page on your phone using the full URL in the address bar (it now ends in <code>#jsonblob:'+id+'</code>) and it will load the same progress.</div>'; toast('Sync on') }
-        catch(e){ toast('Could not connect: '+e.message) }
-      });
-      const g=el('div','setup');
-      g.innerHTML='<div class="review" style="margin-top:11px"><b>Option 3 — private GitHub gist</b><div style="font-size:12.5px;margin-top:5px">More reliable and the data stays in your own GitHub account. Create a token at github.com/settings/tokens with only the <code>gist</code> scope, then paste it here. It is stored in this browser only.</div><label>Token</label><input id="ghTok" type="password" placeholder="ghp_…"><label>Existing gist id (leave blank to create one)</label><input id="ghId" placeholder="optional"></div>';
-      b.appendChild(g);
-      const gb=el('button','btn','Connect gist'); gb.style.marginTop='10px';
-      gb.onclick=async ()=>{
-        const t=$('#ghTok').value.trim(), id=$('#ghId').value.trim();
-        if(!t) return toast('Paste a token first');
-        try{
-          if(id){ cfg.mode='gist'; cfg.token=t; cfg.id=id; saveCfg(); setHash(); await pull(); }
-          else { await connect('gist',t); }
-          toast('Gist sync on'); open();
-        }catch(e){ toast('Could not connect: '+e.message) }
-      };
-      b.appendChild(gb);
-    } else {
-      const info=el('div','review'); info.style.marginTop='11px';
-      info.innerHTML='<b>Connected.</b><div style="font-size:12.5px;margin-top:5px">Mode <code>'+cfg.mode+'</code>, id <code>'+cfg.id+'</code>. To add another device, open this exact link there:<br><code style="word-break:break-all">'+esc(location.href)+'</code></div>';
-      b.appendChild(info);
-      const r=el('div','row'); r.style.marginTop='11px';
-      const a1=el('button','btn','Sync now'); a1.onclick=()=>pull();
-      const a2=el('button','btn','Force upload this device'); a2.onclick=()=>{ stamp(); push() };
-      const a3=el('button','btn','Disconnect'); a3.onclick=()=>{ cfg={mode:'off',id:null,token:null}; saveCfg(); status('','Sync off'); try{history.replaceState(null,'',location.pathname)}catch(e){} open() };
-      r.appendChild(a1); r.appendChild(a2); r.appendChild(a3); b.appendChild(r);
-    }
+    const info=el('div','review'); info.style.marginTop='11px';
+    info.innerHTML='<div style="font-size:12.5px">Backend <code style="word-break:break-all">'+esc(CF_API)+'</code><br>Store <code>'+esc(CF_STORE)+'</code></div>';
+    b.appendChild(info);
+    const r=el('div','row'); r.style.marginTop='11px';
+    const a1=el('button','btn','Sync now'); a1.onclick=()=>pull();
+    const a2=el('button','btn','Force upload this device'); a2.onclick=()=>{ stamp(); push() };
+    r.appendChild(a1); r.appendChild(a2); b.appendChild(r);
+    const warn=el('div','review'); warn.style.marginTop='11px';
+    warn.innerHTML='<div style="font-size:12.5px">Force upload replaces the shared copy with what is on this device. Use it only when this device is the one that is right.</div>';
+    b.appendChild(warn);
     $('#drawer').classList.add('on'); $('#scrim').classList.add('on');
   }
 
