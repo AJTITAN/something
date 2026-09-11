@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Engineering Journey — 3 Month Training OS</title>
+<title>Engineering Journey — 5 YOE Capability Roadmap</title>
 <style>
 :root{
   /* calm, low-contrast palette: nothing is pure white or pure black */
@@ -166,7 +166,7 @@ details .inner b{color:var(--ink)}
   .grid{gap:4px}
 }
 
-/* lock screen + sync */
+/* local progress */
 .gate{position:fixed;inset:0;background:var(--bg);z-index:90;display:grid;place-items:center;padding:20px}
 .gate.off{display:none}
 .gatebox{width:100%;max-width:320px;text-align:left}
@@ -186,25 +186,15 @@ details .inner b{color:var(--ink)}
 </style>
 </head>
 <body>
-<div class="gate" id="gate">
-  <div class="gatebox">
-    <h2>Engineering Journey</h2>
-    <p>Enter your code to open the plan.</p>
-    <input id="pw" type="password" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="••••">
-    <button id="pwGo">Unlock</button>
-    <div class="err" id="pwErr"></div>
-  </div>
-</div>
-
-<div class="wrap" id="app" hidden>
+<div class="wrap" id="app">
   <div class="topbar">
     <div class="brand">
       <h1>Engineering Journey</h1>
-      <p id="phaseLine">Loading plan…</p>
+      <p id="phaseLine">A 12-week execution plan for 3-5 YOE engineering capability</p>
     </div>
     <div class="countdown">
       <span class="num" id="cdNum">–</span>
-      <span class="lab" id="cdLab">days left in the 12-week plan</span>
+      <span class="lab" id="cdLab">days left in the capability sprint</span>
     </div>
   </div>
 
@@ -232,12 +222,11 @@ details .inner b{color:var(--ink)}
       <option value="backlog">Backlog</option>
     </select>
     <span class="grow"></span>
-    <button class="btn" id="btnSync"><span class="syncdot" id="syncDot"></span><span id="syncTxt">Sync</span></button>
+    <button class="btn" id="btnAccount">Sign in to sync</button>
     <button class="btn" id="btnReview">Weekly review</button>
     <button class="btn" id="btnExport">Export</button>
     <button class="btn" id="btnImport">Import</button>
     <button class="btn" id="btnReset">Reset plan</button>
-    <button class="btn" id="btnLock">Log out</button>
     <input type="file" id="fileIn" accept="application/json" style="display:none">
   </div>
 
@@ -296,11 +285,12 @@ details .inner b{color:var(--ink)}
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ============================================================
-   Engineering Journey — 3-month training OS
-   Single file. No backend. State persists in localStorage
-   (falls back to in-memory if storage is blocked).
+  Engineering Journey — 12-week capability roadmap
+  Single file. No backend. Progress persists in localStorage
+  and can be moved between devices with Export / Import.
    ============================================================ */
 const PLAN_DAYS = 84;        // 12 weeks
 const HORIZON   = 170;       // scheduling horizon incl. overflow
@@ -590,7 +580,7 @@ let state = Store.read() || blankState();
 if(!state.tasks) state.tasks={}; if(!state.hol) state.hol=[]; if(!state.dayNote) state.dayNote={};
 const START = parseISO(state.start);
 let _sv=null;
-function save(){ clearTimeout(_sv); _sv=setTimeout(()=>Store.write(state),140) }
+function save(){ clearTimeout(_sv); _sv=setTimeout(()=>Store.write(state),140); Sync.schedulePush(); }
 function saveNow(){ clearTimeout(_sv); Store.write(state) }
 window.addEventListener('beforeunload',saveNow);
 function dateFor(i){ return addDays(START,i) }
@@ -753,7 +743,7 @@ function renderStats(){
   const m=metrics(), c=m.c, sc=m.sc, sk=m.sk, ph=phaseOf(Math.min(TODAY,PLAN_DAYS-1)), wk=Math.floor(TODAY/7)+1;
   const left=Math.max(0,PLAN_DAYS-TODAY);
   $('#cdNum').textContent = TODAY<0? PLAN_DAYS : left;
-  $('#cdLab').textContent = TODAY>=PLAN_DAYS? 'plan complete — keep drilling interviews' : 'days left of 84 · week '+Math.min(12,Math.max(1,wk))+' of 12';
+  $('#cdLab').textContent = TODAY>=PLAN_DAYS? 'sprint complete — keep shipping and drilling interviews' : 'days left of 84 · week '+Math.min(12,Math.max(1,wk))+' of 12';
   $('#phaseLine').textContent = 'Phase '+ph.n+' · '+ph.name;
   const p1=projStats('p1-'), p2=projStats('p2-');
   const box=[
@@ -1153,52 +1143,93 @@ $('#btnReset').onclick=()=>{
   if(!confirm('Reset the plan? Completed tasks, backlog, holidays and notes are all cleared. Export first if you want a copy.')) return;
   state=blankState(); save(); location.reload();
 };
-/* Log out — flushes anything unsaved to the backend, forgets the unlocked flag
-   and any legacy sync config, then returns to the gate. Progress is untouched:
-   it lives in the store, so logging back in on any device restores it. */
-$('#btnLock').onclick=async ()=>{
-  const btn=$('#btnLock'); btn.disabled=true; btn.textContent='Saving…';
-  saveNow();
-  try{ await Sync.push(true) }catch(e){}
-  try{ localStorage.removeItem('ej.open'); localStorage.removeItem('ej.sync.v1') }catch(e){}
-  location.replace(location.pathname);
-};
 CATS.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; $('#filterCat').appendChild(o) });
 
 
 /* ============================================================
-   LOCK SCREEN
-   ============================================================ */
-const PASSCODE='1432';
-function unlock(){
-  $('#gate').classList.add('off'); $('#app').hidden=false;
-  if(TODAY>=0 && TODAY<HORIZON) cursor=dateFor(TODAY);
-  renderAll();
-  Sync.boot();
-  if(!hasLS) toast('Browser storage is blocked here — progress will not survive a refresh.');
-}
-function tryUnlock(){
-  const v=$('#pw').value.trim();
-  if(v===PASSCODE){ try{localStorage.setItem('ej.open','1')}catch(e){} unlock() }
-  else { $('#pw').classList.add('bad'); $('#pwErr').textContent='Wrong code.'; $('#pw').value=''; setTimeout(()=>$('#pw').classList.remove('bad'),600) }
-}
-$('#pwGo').onclick=tryUnlock;
-$('#pw').addEventListener('keydown',e=>{ if(e.key==='Enter') tryUnlock() });
-let alreadyOpen=false; try{ alreadyOpen=localStorage.getItem('ej.open')==='1' }catch(e){}
-if(alreadyOpen) setTimeout(unlock,0); else setTimeout(()=>$('#pw').focus(),60);
+  INITIALIZATION
+  ============================================================ */
+if(TODAY>=0 && TODAY<HORIZON) cursor=dateFor(TODAY);
+renderAll();
+if(!hasLS) toast('Browser storage is blocked here — export progress before refreshing.');
 
-/* ============================================================
-   CLOUD SYNC — always on, pointed at your own Cloudflare Worker + D1.
-   One fixed store id, shared by every device that opens this page.
-   Payload is AES-GCM encrypted with a key derived from the passcode,
-   so the backend only ever stores ciphertext.
-   ============================================================ */
-/* Your backend (Cloudflare Worker + D1) and the one store every device uses.
-   Both are fixed here — sync is always on and cannot be switched off from the UI. */
-const CF_API='https://ej-sync.ajtitan-blog.workers.dev';
-const CF_STORE='32fb0a92-1d40-42b7-b9b9-47ff6d363535';
+/* Paste the public Project URL and anon key after creating your Supabase project.
+   The anon key is safe in a static site; Row Level Security protects each user. */
+const SUPABASE_URL='PASTE_YOUR_SUPABASE_PROJECT_URL_HERE';
+const SUPABASE_ANON_KEY='PASTE_YOUR_SUPABASE_ANON_KEY_HERE';
+const Sync = {
+  client:null, user:null, timer:null, pulling:false,
+  configured(){ return SUPABASE_URL.indexOf('PASTE_')!==0 && SUPABASE_ANON_KEY.indexOf('PASTE_')!==0 && window.supabase; },
+  updateButton(){
+    const button=$('#btnAccount');
+    button.textContent=this.user ? this.user.email+' · Synced' : 'Sign in to sync';
+    button.classList.toggle('on',!!this.user);
+  },
+  async boot(){
+    if(!this.configured()){ this.updateButton(); return; }
+    this.client=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    const {data:{session}}=await this.client.auth.getSession();
+    this.user=session&&session.user; this.updateButton();
+    if(this.user) await this.pull(true);
+    this.client.auth.onAuthStateChange(async (_event,session)=>{
+      this.user=session&&session.user; this.updateButton();
+      if(this.user) await this.pull(true);
+    });
+  },
+  schedulePush(){
+    if(!this.user||this.pulling) return;
+    state.updatedAt=Date.now();
+    clearTimeout(this.timer); this.timer=setTimeout(()=>this.push(true),900);
+  },
+  async push(quiet){
+    if(!this.client||!this.user||this.pulling) return;
+    const {error}=await this.client.from('planner_states').upsert({user_id:this.user.id,state,updated_at:new Date().toISOString()});
+    if(error){ if(!quiet) toast('Sync failed: '+error.message); return; }
+    if(!quiet) toast('Progress synced');
+  },
+  async pull(quiet){
+    if(!this.client||!this.user) return;
+    this.pulling=true;
+    const {data,error}=await this.client.from('planner_states').select('state').eq('user_id',this.user.id).maybeSingle();
+    if(error){ this.pulling=false; if(!quiet) toast('Sync failed: '+error.message); return; }
+    if(data&&data.state&&(!state.updatedAt||data.state.updatedAt>=state.updatedAt)){
+      state=data.state; state.tasks=state.tasks||{}; state.hol=state.hol||[]; state.dayNote=state.dayNote||{};
+      saveNow(); reschedule(); if(!quiet) toast('Latest progress loaded');
+      this.pulling=false;
+    }else{
+      this.pulling=false;
+      await this.push(true);
+    }
+  },
+  async sendMagicLink(email){
+    const {error}=await this.client.auth.signInWithOtp({email,options:{emailRedirectTo:location.href}});
+    if(error) toast('Sign-in failed: '+error.message); else toast('Check your email for the sign-in link');
+  },
+  open(){
+    $('#dTitle').textContent='Account & sync';
+    $('#dSub').textContent=this.user?'Your progress syncs automatically':'Sign in once on each device';
+    const body=$('#dBody'); body.innerHTML='';
+    if(!this.configured()){
+      body.appendChild(el('div','review','<b>Supabase setup required.</b><br>Set <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> in this file, then follow DEPLOY.md. You only do this once as the site owner.'));
+    }else if(this.user){
+      body.appendChild(el('div','review','<b>'+esc(this.user.email)+'</b><br>Your changes are saved automatically and appear on any device where you sign in with this email.'));
+      const row=el('div','row'); row.style.marginTop='12px';
+      const sync=el('button','btn primary','Sync now'); sync.onclick=()=>this.push(false);
+      const load=el('button','btn','Load latest'); load.onclick=()=>this.pull(false);
+      const signOut=el('button','btn','Sign out'); signOut.onclick=async()=>{await this.client.auth.signOut(); this.user=null; this.updateButton(); closeDrawer(); toast('Signed out');};
+      row.appendChild(sync); row.appendChild(load); row.appendChild(signOut); body.appendChild(row);
+    }else{
+      body.appendChild(el('div','review','<b>Sync your roadmap.</b><br>Enter your email and open the sign-in link. On another device, use the same email and your progress will load automatically.'));
+      const email=el('input'); email.type='email'; email.placeholder='you@example.com'; email.autocomplete='email'; email.style.marginTop='12px'; body.appendChild(email);
+      const send=el('button','btn primary','Email me a sign-in link'); send.style.marginTop='10px'; send.onclick=()=>{if(!email.value.trim()) return toast('Enter your email address'); this.sendMagicLink(email.value.trim());}; body.appendChild(send);
+    }
+    $('#drawer').classList.add('on'); $('#scrim').classList.add('on');
+  }
+};
+$('#btnAccount').onclick=()=>Sync.open();
+Sync.boot();
 
-const Sync = (function(){
+if(false){
   const CFGK='ej.sync.v1';
   try{ localStorage.removeItem(CFGK) }catch(e){}   /* drop any legacy jsonblob/gist config */
   const cfg = {mode:'cf', id:CF_STORE, api:CF_API, token:null};
@@ -1337,9 +1368,8 @@ const Sync = (function(){
     $('#drawer').classList.add('on'); $('#scrim').classList.add('on');
   }
 
-  return {boot,open,schedulePush,pull,push,status:()=>cfg.mode};
-})();
-$('#btnSync').onclick=()=>Sync.open();
+  const legacySync = {boot,open,schedulePush,pull,push,status:()=>cfg.mode};
+}
 
 /* every local change also queues a cloud write */
 const _resched=reschedule;
