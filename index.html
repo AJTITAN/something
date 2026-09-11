@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Engineering Journey — 5 YOE Capability Roadmap</title>
+<title>Creative Engineering OS — 12-Week Builder Roadmap</title>
 <style>
 :root{
   /* calm, low-contrast palette: nothing is pure white or pure black */
@@ -189,12 +189,12 @@ details .inner b{color:var(--ink)}
 <div class="wrap" id="app">
   <div class="topbar">
     <div class="brand">
-      <h1>Engineering Journey</h1>
-      <p id="phaseLine">A 12-week execution plan for 3-5 YOE engineering capability</p>
+      <h1>Creator Engine OS</h1>
+      <p id="phaseLine">Build creative products people actually want to use — not just impressive demos</p>
     </div>
     <div class="countdown">
       <span class="num" id="cdNum">–</span>
-      <span class="lab" id="cdLab">days left in the capability sprint</span>
+      <span class="lab" id="cdLab">days left in the creative sprint</span>
     </div>
   </div>
 
@@ -222,7 +222,6 @@ details .inner b{color:var(--ink)}
       <option value="backlog">Backlog</option>
     </select>
     <span class="grow"></span>
-    <button class="btn" id="btnAccount">Sign in to sync</button>
     <button class="btn" id="btnReview">Weekly review</button>
     <button class="btn" id="btnExport">Export</button>
     <button class="btn" id="btnImport">Import</button>
@@ -285,12 +284,11 @@ details .inner b{color:var(--ink)}
 
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ============================================================
   Engineering Journey — 12-week capability roadmap
-  Single file. No backend. Progress persists in localStorage
-  and can be moved between devices with Export / Import.
+  Single file. Progress persists in localStorage and can be
+  moved between devices with Export / Import.
    ============================================================ */
 const PLAN_DAYS = 84;        // 12 weeks
 const HORIZON   = 170;       // scheduling horizon incl. overflow
@@ -580,7 +578,7 @@ let state = Store.read() || blankState();
 if(!state.tasks) state.tasks={}; if(!state.hol) state.hol=[]; if(!state.dayNote) state.dayNote={};
 const START = parseISO(state.start);
 let _sv=null;
-function save(){ clearTimeout(_sv); _sv=setTimeout(()=>Store.write(state),140); Sync.schedulePush(); }
+function save(){ clearTimeout(_sv); _sv=setTimeout(()=>Store.write(state),140); }
 function saveNow(){ clearTimeout(_sv); Store.write(state) }
 window.addEventListener('beforeunload',saveNow);
 function dateFor(i){ return addDays(START,i) }
@@ -743,8 +741,8 @@ function renderStats(){
   const m=metrics(), c=m.c, sc=m.sc, sk=m.sk, ph=phaseOf(Math.min(TODAY,PLAN_DAYS-1)), wk=Math.floor(TODAY/7)+1;
   const left=Math.max(0,PLAN_DAYS-TODAY);
   $('#cdNum').textContent = TODAY<0? PLAN_DAYS : left;
-  $('#cdLab').textContent = TODAY>=PLAN_DAYS? 'sprint complete — keep shipping and drilling interviews' : 'days left of 84 · week '+Math.min(12,Math.max(1,wk))+' of 12';
-  $('#phaseLine').textContent = 'Phase '+ph.n+' · '+ph.name;
+  $('#cdLab').textContent = TODAY>=PLAN_DAYS? 'sprint complete — keep shipping, refining, and building signal' : 'days left of 84 · week '+Math.min(12,Math.max(1,wk))+' of 12';
+  $('#phaseLine').textContent = 'Phase '+ph.n+' · '+ph.name+' · build with clarity, taste, and a stronger point of view';
   const p1=projStats('p1-'), p2=projStats('p2-');
   const box=[
     ['Completion', Math.round(100*c.done/c.total)+'%', c.done+' of '+c.total+' tasks', Math.round(100*c.done/c.total)],
@@ -969,21 +967,46 @@ function renderScores(){
 }
 
 const PROJECTS=[
- {key:'p1-',name:'Palimpsest',tag:'Decision memory for engineering teams · Next.js · Node · Postgres+pgvector · Redis · queues · RAG · tool calling',
-  pitch:'Every codebase is layered over erased reasoning. Palimpsest ingests pull requests, incident threads, RFCs and design docs, extracts the decisions inside them into a linked decision graph, and answers “why is this the way it is?” with cited evidence — then flags new pull requests that quietly contradict a decision nobody remembers making.',
-  detail:'<b>Problem.</b> New engineers ask why a rule exists; the person who knew has left. Documentation records what, not why, and search returns documents rather than decisions.<br><br>'+
-   '<b>Personas.</b> A joiner in week one who needs context fast; a staff engineer reviewing a PR that reverses a hard-won choice; an engineering manager auditing what a team actually decided last quarter.<br><br>'+
-   '<b>Architecture.</b> Next.js App Router (server components for reads, server actions for writes) → Node API (controller/service/repository, cookie sessions, workspace-scoped repos) → Postgres with pgvector for documents, chunks, decisions and decision_links → Redis for caching, rate limits and the job queue → worker processes doing parse, chunk, embed, extract, link → WebSockets for live ingestion progress.<br><br>'+
-   '<b>AI architecture.</b> Structure-aware chunking with rich metadata; hybrid retrieval (full-text + vector, fused by reciprocal rank); cross-encoder reranking; decision extraction as schema-constrained structured output; a bounded tool-calling loop with graph traversal, search and fetch tools, each authorisation-checked; every answer cites chunk ids and abstains when evidence is weak.<br><br>'+
-   '<b>Hard parts worth talking about.</b> Indirect prompt injection through ingested documents; contradiction detection without drowning reviewers in false positives; keeping embedding cost bounded on re-ingest via content hashing; tenant isolation enforced at the repository layer so a missing filter is impossible; resumable ingestion when a worker dies mid-document.<br><br>'+
-   '<b>Testing and evaluation.</b> Unit tests on services with fake repositories, integration tests on a throwaway Postgres, a 40-question golden set scored for recall@k and faithfulness, and a CI gate that fails the build when answer faithfulness regresses.'},
- {key:'p2-',name:'Hindsight FC',tag:'A decision-audit engine for football managers · ingestion at scale · expected-threat model · cohort retrieval · grounded narratives',
-  pitch:'Not a stats dashboard. Hindsight FC reconstructs the state of a match second by second, then judges the manager: for every substitution, formation change and tactical shift, it finds comparable historical match states, computes what typically happened next, and reports the value the decision added or destroyed — with a narrative that is only allowed to cite events that actually occurred.',
-  detail:'<b>Problem.</b> Football analysis judges decisions by their outcome, not by the information available at the time. A substitution that preceded a goal is called genius; the same substitution before a defeat is called panic. Outcome bias, at scale.<br><br>'+
-   '<b>Approach.</b> Ingest open event data, segment it into possession chains, and fit a grid-based expected-threat surface by iterating transition values to convergence. Represent match state as a vector: score margin, minute, red cards, territorial share, chain quality, fatigue proxy, opponent shape. For a given decision, retrieve a cohort of similar historical states, compute the distribution of subsequent threat swing, and report the manager’s delta against that baseline with a confidence band.<br><br>'+
-   '<b>Engineering meat.</b> Streaming ingestion of files too large to hold in memory, idempotent and resumable via checkpoints; bulk COPY loading; heavy precomputation on write so reads are fast; Redis caching of hot match aggregates; hybrid metadata-filtered vector search for cohort retrieval; a visualisation layer showing the threat surface and a decision timeline.<br><br>'+
-   '<b>AI layer.</b> A narrative generator constrained to cited event ids, with an automatic rejection pass for any claim not supported by retrieved events, plus a tool-calling “ask the match” interface that can query chains, players and cohorts.<br><br>'+
-   '<b>Tradeoffs you can defend.</b> Precompute versus query-time compute; cohort size versus similarity threshold; how to handle sparse states (a 3-0 lead with ten men in minute 80 has few neighbours) by widening features rather than inventing data; and why the system reports uncertainty instead of a single confident verdict.'}
+ {key:'p1-',name:'PairNest',tag:'developer community · pair programming · project matchmaking · build with friends · startup cofounder circle',
+  pitch:'A developer community where people can find a trusted partner to build, debug, or accelerate a side project. Think of it as a more serious, more useful version of a project matching platform: not just “find a teammate,” but “find the right person for the exact stage of your build.”',
+  detail:'<b>Problem.</b> Most developers want to build something real, but they are stuck alone. They need a teammate for debugging, architecture, launch support, or simply accountability — yet the existing ecosystem is noisy, shallow, and difficult to trust.<br><br>'+
+   '<b>Personas.</b> Students building side projects, early-stage developers wanting a co-builder, indie hackers needing a technical friend, and people who want feedback, accountability, and a serious partner for shipping.<br><br>'+
+   '<b>Product idea.</b> A community marketplace where developers create a profile around their stack, project stage, and working style, then get matched with people for pair programming, reviews, debugging sessions, or side-project collaboration.<br><br>'+
+   '<b>Why it matters.</b> Building alone is slow, frustrating and lonely. A serious community layer around project collaboration gives people momentum, quality, and shared ownership.<br><br>'+
+   '<b>Hard parts worth discussing.</b> Trust and quality control, matching people by actual compatibility instead of just skill tags, preventing low-effort ghost participation, and creating a healthy developer culture rather than a spammy networking app.<br><br>'+
+   '<b>Build story.</b> Start with one feature: project matching and pair sessions, then expand into live rooms, work sessions, technical reviews, community challenges, and founder-style accountability loops.'},
+ {key:'p2-',name:'BuildBridge',tag:'startup jobs · projects · dev network · product talent · side project hiring',
+  pitch:'A startup-style talent network for developers who want to join real ideas, not just post their resumes into a black hole. It connects builders with micro-startups, early founders, and small product teams that need technical people for meaningful, fast-moving work.',
+  detail:'<b>Problem.</b> Job boards are too stale and too generic. Real startups, side projects, and small product teams need flexible talent but do not have the time or brand to recruit through traditional hiring channels.<br><br>'+
+   '<b>Personas.</b> Developers looking for meaningful work, early founders needing a build partner, engineers wanting to test startup energy without full-time risk, and product teams trying to hire without a bloated recruitment process.<br><br>'+
+   '<b>Product idea.</b> A marketplace that matches people to startup roles, product teams, and side-project opportunities based on skill, stage, speed, and commitment level — not just title and CV experience.<br><br>'+
+   '<b>Why it matters.</b> People do not just want a job; they want a build environment. This product sits at the intersection of startup discovery, talent matching, and community trust.<br><br>'+
+   '<b>Hard parts worth discussing.</b> Solving trust without a resume-only model, filtering for meaningful projects instead of hype, and giving people enough signal to choose well.<br><br>'+
+   '<b>Build story.</b> Start with founder hiring and project matching, then expand into teams, cohort-based startup sprints, and skill-based trust layers.'},
+ {key:'p3-',name:'Signal Atlas',tag:'project discovery · developer learning · build visibility · growth graph · project orbit',
+  pitch:'A developer project discovery system built for people who want to understand what is actually being built, what is growing, and which projects are worth joining or learning from. It is a map of the real builder ecosystem, not just a leaderboard of hype.',
+  detail:'<b>Problem.</b> The online ecosystem is fragmented. Good projects are hidden in Discords, GitHub repos, and personal communities, and serious builders struggle to discover where momentum is actually happening.<br><br>'+
+   '<b>Personas.</b> Developers looking for opportunities, learners wanting to study real projects, small teams needing early talent, and creators trying to build visibility around meaningful work.<br><br>'+
+   '<b>Product idea.</b> A system that tracks active project momentum, technical depth, builder activity, and community engagement so people can discover projects and people with real traction, not just noise.<br><br>'+
+   '<b>Why it matters.</b> People need better signal. A project ecosystem without discovery is just a pile of random repositories and community posts.<br><br>'+
+   '<b>Hard parts worth discussing.</b> Ranking projects by real value instead of vanity metrics, building trust in project quality, and making the platform useful for both builders and learners.<br><br>'+
+   '<b>Build story.</b> Start with project discovery and community activity, then layer in matching, talent discovery, and “who is worth learning from” intelligence.'},
+ {key:'p4-',name:'LaunchLoop',tag:'developer feedback · product iteration · QA loops · founder build community · experiments',
+  pitch:'A feedback and validation tool for indie developers and early-stage builders who need fast, quality feedback from the right people before they launch. It brings together testing, structured critique, and community accountability in one loop.',
+  detail:'<b>Problem.</b> Most builders launch too early or too late because they do not have a good way to get useful, targeted feedback. They either get vague comments or silence.<br><br>'+
+   '<b>Personas.</b> Indie hackers, early founders, side project builders, and developers launching small tools or products who need signal before spending more time on polish.<br><br>'+
+   '<b>Product idea.</b> A structured testing environment where builders share a product, get targeted feedback from a relevant community, and iterate through fast feedback loops built around real usage and product questions.<br><br>'+
+   '<b>Why it matters.</b> Good products are built by learning fast. This product makes the learning loop more intentional and less random.<br><br>'+
+   '<b>Hard parts worth discussing.</b> Designing useful feedback prompts, reducing low-quality responses, and turning critiques into concrete product decisions instead of endless opinions.<br><br>'+
+   '<b>Build story.</b> Begin with structured feedback challenges, then expand into validation cohorts, launch testing, and product review communities.'},
+ {key:'p5-',name:'CrewDock',tag:'technical collaboration · workrooms · project pods · community sync · remote build teams',
+  pitch:'A collaborative workspace for developer groups who want to build together without the friction of scattered tools. It is not just chat and tasks — it is a team rhythm system for focused project pods and remote build sprints.',
+  detail:'<b>Problem.</b> Small developer teams often run on Discord, Notion, GitHub, and vague status updates. The friction is not just coordination — it is the lack of a shared operating rhythm.<br><br>'+
+   '<b>Personas.</b> Small technical teams, student groups, founder pods, and side-project squads building in public without a formal platform.<br><br>'+
+   '<b>Product idea.</b> Build rooms where a group can coordinate tasks, pair on code, share blockers, and keep their sprint rhythm visible. It blends async communication with a lightweight work session structure.<br><br>'+
+   '<b>Why it matters.</b> Developers do not just need tools; they need a shared system to stay aligned. This product helps small groups act like a real team instead of a collection of separate inboxes.<br><br>'+
+   '<b>Hard parts worth discussing.</b> Keeping rooms lightweight, avoiding task-tool fatigue, and creating a system that helps teams stay focused without turning into a second job.<br><br>'+
+   '<b>Build story.</b> Start with project pods and sprint rooms, then expand into collaborative work sessions, matching, and community-driven build circles.'}
 ];
 let PROJBUILT=false;
 function renderProjects(){
@@ -1009,15 +1032,19 @@ function renderProjects(){
     box.appendChild(el('div','bar','<i style="width:'+s.pct+'%;background:var(--proj)"></i>'));
     const d=el('details'); d.appendChild(el('summary',null,'Architecture, hard problems and testing strategy'));
     d.appendChild(el('div','inner',p.detail)); box.appendChild(d);
-    const d2=el('details'); const sm=el('summary','mstone','Milestones ('+s.done+'/'+s.total+' done)'); d2.appendChild(sm);
-    const ul=el('ul','tl');
-    s.list.forEach(t=>{
-      const done=stRead(t.id).s==='completed';
-      const li=el('li',done?'done':'', '<b>'+esc(t.title.split('— ')[1]||t.title)+'</b><br>'+fmt(dateFor(SCH.placed[t.id])));
-      li.onclick=()=>openDay(SCH.placed[t.id],t.id); li.style.cursor='pointer';
-      ul.appendChild(li);
-    });
-    d2.appendChild(ul); box.appendChild(d2);
+
+    if (p.key === 'p1-' || p.key === 'p2-') {
+      const d2=el('details'); const sm=el('summary','mstone','Milestones ('+s.done+'/'+s.total+' done)'); d2.appendChild(sm);
+      const ul=el('ul','tl');
+      s.list.forEach(t=>{
+        const done=stRead(t.id).s==='completed';
+        const li=el('li',done?'done':'', '<b>'+esc(t.title.split('— ')[1]||t.title)+'</b><br>'+fmt(dateFor(SCH.placed[t.id])));
+        li.onclick=()=>openDay(SCH.placed[t.id],t.id); li.style.cursor='pointer';
+        ul.appendChild(li);
+      });
+      d2.appendChild(ul); box.appendChild(d2);
+    }
+
     out.appendChild(box);
   });
 }
@@ -1152,229 +1179,6 @@ CATS.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textCon
 if(TODAY>=0 && TODAY<HORIZON) cursor=dateFor(TODAY);
 renderAll();
 if(!hasLS) toast('Browser storage is blocked here — export progress before refreshing.');
-
-/* Paste the public Project URL and anon key after creating your Supabase project.
-   The anon key is safe in a static site; Row Level Security protects each user. */
-const SUPABASE_URL='https://acsapmfwkqkzzfcohzdx.supabase.co';
-const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjc2FwbWZ3a3FrenpmY29oemR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxOTI2MjIsImV4cCI6MjEwMzc2ODYyMn0.n8zV97R8rpj4v8OKBzBHO5F1YmtjmYRN4wb5GxkwKO8';
-const Sync = {
-  client:null, user:null, timer:null, pulling:false,
-  configured(){ return SUPABASE_URL.indexOf('PASTE_')!==0 && SUPABASE_ANON_KEY.indexOf('PASTE_')!==0 && window.supabase; },
-  updateButton(){
-    const button=$('#btnAccount');
-    button.textContent=this.user ? this.user.email+' · Synced' : 'Sign in to sync';
-    button.classList.toggle('on',!!this.user);
-  },
-  async boot(){
-    if(!this.configured()){ this.updateButton(); return; }
-    this.client=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-    const {data:{session}}=await this.client.auth.getSession();
-    this.user=session&&session.user; this.updateButton();
-    if(this.user) await this.pull(true);
-    this.client.auth.onAuthStateChange(async (_event,session)=>{
-      this.user=session&&session.user; this.updateButton();
-      if(this.user) await this.pull(true);
-    });
-  },
-  schedulePush(){
-    if(!this.user||this.pulling) return;
-    state.updatedAt=Date.now();
-    clearTimeout(this.timer); this.timer=setTimeout(()=>this.push(true),900);
-  },
-  async push(quiet){
-    if(!this.client||!this.user||this.pulling) return;
-    const {error}=await this.client.from('planner_states').upsert({user_id:this.user.id,state,updated_at:new Date().toISOString()});
-    if(error){ if(!quiet) toast('Sync failed: '+error.message); return; }
-    if(!quiet) toast('Progress synced');
-  },
-  async pull(quiet){
-    if(!this.client||!this.user) return;
-    this.pulling=true;
-    const {data,error}=await this.client.from('planner_states').select('state').eq('user_id',this.user.id).maybeSingle();
-    if(error){ this.pulling=false; if(!quiet) toast('Sync failed: '+error.message); return; }
-    if(data&&data.state&&(!state.updatedAt||data.state.updatedAt>=state.updatedAt)){
-      state=data.state; state.tasks=state.tasks||{}; state.hol=state.hol||[]; state.dayNote=state.dayNote||{};
-      saveNow(); reschedule(); if(!quiet) toast('Latest progress loaded');
-      this.pulling=false;
-    }else{
-      this.pulling=false;
-      await this.push(true);
-    }
-  },
-  async sendMagicLink(email){
-    const {error}=await this.client.auth.signInWithOtp({email,options:{emailRedirectTo:location.href}});
-    if(error) toast('Sign-in failed: '+error.message); else toast('Check your email for the sign-in link');
-  },
-  open(){
-    $('#dTitle').textContent='Account & sync';
-    $('#dSub').textContent=this.user?'Your progress syncs automatically':'Sign in once on each device';
-    const body=$('#dBody'); body.innerHTML='';
-    if(!this.configured()){
-      body.appendChild(el('div','review','<b>Supabase setup required.</b><br>Set <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> in this file, then follow DEPLOY.md. You only do this once as the site owner.'));
-    }else if(this.user){
-      body.appendChild(el('div','review','<b>'+esc(this.user.email)+'</b><br>Your changes are saved automatically and appear on any device where you sign in with this email.'));
-      const row=el('div','row'); row.style.marginTop='12px';
-      const sync=el('button','btn primary','Sync now'); sync.onclick=()=>this.push(false);
-      const load=el('button','btn','Load latest'); load.onclick=()=>this.pull(false);
-      const signOut=el('button','btn','Sign out'); signOut.onclick=async()=>{await this.client.auth.signOut(); this.user=null; this.updateButton(); closeDrawer(); toast('Signed out');};
-      row.appendChild(sync); row.appendChild(load); row.appendChild(signOut); body.appendChild(row);
-    }else{
-      body.appendChild(el('div','review','<b>Sync your roadmap.</b><br>Enter your email and open the sign-in link. On another device, use the same email and your progress will load automatically.'));
-      const email=el('input'); email.type='email'; email.placeholder='you@example.com'; email.autocomplete='email'; email.style.marginTop='12px'; body.appendChild(email);
-      const send=el('button','btn primary','Email me a sign-in link'); send.style.marginTop='10px'; send.onclick=()=>{if(!email.value.trim()) return toast('Enter your email address'); this.sendMagicLink(email.value.trim());}; body.appendChild(send);
-    }
-    $('#drawer').classList.add('on'); $('#scrim').classList.add('on');
-  }
-};
-$('#btnAccount').onclick=()=>Sync.open();
-Sync.boot();
-
-if(false){
-  const CFGK='ej.sync.v1';
-  try{ localStorage.removeItem(CFGK) }catch(e){}   /* drop any legacy jsonblob/gist config */
-  const cfg = {mode:'cf', id:CF_STORE, api:CF_API, token:null};
-  let keyP=null, busy=false, lastPush=0, timer=null;
-  let applying=false, remoteHasData=false;
-  /* how much real work a state object contains — used to refuse destructive writes */
-  function weight(s){
-    if(!s) return -1;
-    let n=0; const t=s.tasks||{};
-    for(const k in t){ const x=t[k]; if(x && ((x.s && x.s!=='planned') || x.weak || x.note)) n++ }
-    return n + ((s.hol||[]).length) + Object.keys(s.dayNote||{}).length;
-  }
-
-  function saveCfg(){}   /* nothing to persist — the config is baked into the file */
-  function status(kind,text){
-    const d=$('#syncDot'), t=$('#syncTxt'); if(!d) return;
-    d.className='syncdot'+(kind?' '+kind:''); t.textContent=text;
-  }
-  const b64=u=>btoa(String.fromCharCode.apply(null,u));
-  const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
-  function subtleOK(){ return typeof crypto!=='undefined' && crypto.subtle }
-  function key(){
-    if(!keyP){
-      const enc=new TextEncoder();
-      keyP=crypto.subtle.importKey('raw',enc.encode(PASSCODE),'PBKDF2',false,['deriveKey'])
-        .then(b=>crypto.subtle.deriveKey({name:'PBKDF2',salt:enc.encode('engineering-journey-v1'),iterations:100000,hash:'SHA-256'},b,{name:'AES-GCM',length:256},false,['encrypt','decrypt']));
-    }
-    return keyP;
-  }
-  async function pack(obj){
-    if(!subtleOK()) return {v:0,plain:obj};
-    const iv=crypto.getRandomValues(new Uint8Array(12));
-    const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await key(),new TextEncoder().encode(JSON.stringify(obj)));
-    return {v:1,iv:b64(iv),d:b64(new Uint8Array(ct)),at:obj.updatedAt||0};
-  }
-  async function unpack(box){
-    if(!box) return null;
-    if(box.v===0||box.plain) return box.plain;
-    if(!box.d) return null;
-    if(!subtleOK()) throw new Error('no crypto');
-    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(box.iv)},await key(),unb64(box.d));
-    return JSON.parse(new TextDecoder().decode(pt));
-  }
-
-  /* ---- provider: your Worker ---- */
-  const providers={
-    cf:{
-      base(){ const b=(CF_API||'').replace(/\/+$/,''); if(!b) throw new Error('CF_API is not set in this file'); return b },
-      async create(body){
-        const r=await fetch(this.base()+'/blob',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-        if(!r.ok) throw new Error('create failed ('+r.status+')');
-        return (await r.json()).id;
-      },
-      async get(id){
-        const r=await fetch(this.base()+'/blob/'+id,{cache:'no-store'});
-        if(r.status===404) return null; if(!r.ok) throw new Error('read failed ('+r.status+')');
-        return r.json();
-      },
-      async put(id,body){
-        const r=await fetch(this.base()+'/blob/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-        if(!r.ok) throw new Error('write failed ('+r.status+')');
-      }
-    }
-  };
-  function P(){ return providers[cfg.mode] }
-
-  function stamp(){ state.updatedAt=Date.now(); save(); }
-  function adopt(remote){
-    applying=true;
-    state=remote; state.hol=state.hol||[]; state.dayNote=state.dayNote||{}; state.tasks=state.tasks||{};
-    saveNow(); reschedule();
-    applying=false;
-  }
-
-  async function pull(quiet){
-    busy=true; status('busy','Checking…');
-    try{
-      const box=await P().get(cfg.id);
-      const remote=await unpack(box);
-      if(!remote){
-        remoteHasData=false;
-        if(weight(state)>0) await push(true); else status('ok','Synced');
-      } else {
-        const rW=weight(remote), lW=weight(state);
-        const rT=remote.updatedAt||0, lT=state.updatedAt||0;
-        remoteHasData = rW>0;
-        if(rT>lT || (rW>0 && lW===0)){
-          adopt(remote); status('ok','Synced');
-          if(!quiet) toast('Pulled newer progress from your other device');
-        } else if(lT>rT && !(lW===0 && rW>0)){
-          await push(true);
-        } else status('ok','Synced');
-      }
-    }catch(e){ status('err','Offline'); if(!quiet) toast('Sync unavailable: '+e.message) }
-    busy=false;
-  }
-  async function push(quiet){
-    if(weight(state)===0 && remoteHasData){ status('ok','Synced'); if(!quiet) toast('Nothing to upload yet — this device is still empty'); return }
-    busy=true; status('busy','Saving…');
-    try{ await P().put(cfg.id, await pack(state)); remoteHasData = weight(state)>0; lastPush=Date.now(); status('ok','Synced'); }
-    catch(e){ status('err','Offline'); if(!quiet) toast('Could not save to the cloud: '+e.message) }
-    busy=false;
-  }
-  function schedulePush(){
-    if(applying) return;
-    stamp();
-    clearTimeout(timer); timer=setTimeout(()=>push(true),1500);
-  }
-  /* the store is fixed; there is nothing to connect and nothing to fork */
-  function setHash(){ try{ if(location.hash) history.replaceState(null,'',location.pathname) }catch(e){} }
-  function boot(){
-    setHash();
-    pull(true);
-    window.addEventListener('focus',()=>{ if(!busy && Date.now()-lastPush>4000) pull(true) });
-    setInterval(()=>{ if(!busy && !document.hidden) pull(true) },90000);
-  }
-
-  /* ---- status panel in the drawer ---- */
-  function open(){
-    $('#dTitle').textContent='Sync';
-    $('#dSub').textContent='Always on — your Cloudflare backend';
-    const b=$('#dBody'); b.innerHTML='';
-    const box=el('div','setup');
-    box.innerHTML='<div class="review"><b>How this works.</b> Every device running this page reads and writes the same store on your own Worker. Progress is encrypted in the browser with a key derived from your passcode before it is uploaded, so the server only ever holds ciphertext. There is nothing to connect and nothing to switch off — open the page anywhere and it is the same plan.</div>';
-    b.appendChild(box);
-    const info=el('div','review'); info.style.marginTop='11px';
-    info.innerHTML='<div style="font-size:12.5px">Backend <code style="word-break:break-all">'+esc(CF_API)+'</code><br>Store <code>'+esc(CF_STORE)+'</code></div>';
-    b.appendChild(info);
-    const r=el('div','row'); r.style.marginTop='11px';
-    const a1=el('button','btn','Sync now'); a1.onclick=()=>pull();
-    const a2=el('button','btn','Force upload this device'); a2.onclick=()=>{ stamp(); push() };
-    r.appendChild(a1); r.appendChild(a2); b.appendChild(r);
-    const warn=el('div','review'); warn.style.marginTop='11px';
-    warn.innerHTML='<div style="font-size:12.5px">Force upload replaces the shared copy with what is on this device. Use it only when this device is the one that is right.</div>';
-    b.appendChild(warn);
-    $('#drawer').classList.add('on'); $('#scrim').classList.add('on');
-  }
-
-  const legacySync = {boot,open,schedulePush,pull,push,status:()=>cfg.mode};
-}
-
-/* every local change also queues a cloud write */
-const _resched=reschedule;
-reschedule=function(){ _resched(); Sync.schedulePush() };
-
 
 
 </script>
