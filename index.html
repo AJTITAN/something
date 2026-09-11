@@ -1155,8 +1155,8 @@ if(!hasLS) toast('Browser storage is blocked here — export progress before ref
 
 /* Paste the public Project URL and anon key after creating your Supabase project.
    The anon key is safe in a static site; Row Level Security protects each user. */
-const SUPABASE_URL='PASTE_YOUR_SUPABASE_PROJECT_URL_HERE';
-const SUPABASE_ANON_KEY='PASTE_YOUR_SUPABASE_ANON_KEY_HERE';
+const SUPABASE_URL='https://acsapmfwkqkzzfcohzdx.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjc2FwbWZ3a3FrenpmY29oemR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxOTI2MjIsImV4cCI6MjEwMzc2ODYyMn0.n8zV97R8rpj4v8OKBzBHO5F1YmtjmYRN4wb5GxkwKO8';
 const Sync = {
   client:null, user:null, timer:null, pulling:false,
   configured(){ return SUPABASE_URL.indexOf('PASTE_')!==0 && SUPABASE_ANON_KEY.indexOf('PASTE_')!==0 && window.supabase; },
