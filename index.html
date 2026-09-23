@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Creative Engineering OS — 12-Week Builder Roadmap</title>
+<title>Engineering Journey — 3 Month Training OS</title>
 <style>
 :root{
   /* calm, low-contrast palette: nothing is pure white or pure black */
@@ -12,6 +12,7 @@
   --acc:#7ea6c4;
   --js:#c9a96a; --ts:#7ea6c4; --react:#6fb2b5; --next:#9aa0a8; --node:#84b58e;
   --sql:#8b9bc9; --prod:#c09277; --ai:#a08fc0; --proj:#c58a7c; --iv:#c4869a; --rev:#8fb59c; --game:#7fb8ac;
+  --test:#9fbf7a; --cloud:#d0a15e; --py:#8fa8d6; --sec:#cf7d7d; --car:#b9ae8c;
   --ok:#84b58e; --warn:#c9a96a; --bad:#c4869a; --hol:#63656b;
   --f:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
   --fm:"SFMono-Regular",Consolas,Menlo,monospace;
@@ -72,6 +73,7 @@ select.search{min-width:auto}
 .cell.out{opacity:.3}
 .cell.today{border-color:var(--acc)}
 .cell.hol{background:var(--bg2)}
+.cell.buf .d b{color:var(--rev)}
 .cell.sel{border-color:var(--line2);background:var(--surf2)}
 .cell .d{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
 .cell .d b{color:var(--ink2);font-weight:600;font-size:12.5px}
@@ -105,6 +107,8 @@ select.search{min-width:auto}
 .tag.crit{color:var(--bad)}
 .tag.high{color:var(--warn)}
 .tag.bk{color:var(--proj)}
+.tag.lane{color:var(--proj)}
+.tag.stretch{color:var(--dim);border-style:dashed}
 
 .scrim{position:fixed;inset:0;background:rgba(10,10,12,.5);z-index:40;opacity:0;pointer-events:none;transition:opacity .15s}
 .scrim.on{opacity:1;pointer-events:auto}
@@ -127,6 +131,7 @@ select.search{min-width:auto}
 .hist{font-size:11.5px;color:var(--dim);margin-top:9px;padding-top:7px;border-top:1px solid var(--line)}
 textarea{width:100%;background:var(--surf);border:1px solid var(--line);border-radius:7px;padding:8px;min-height:58px;resize:vertical;color:var(--ink2)}
 .note-lbl{font-size:12px;color:var(--mut);margin:8px 0 5px}
+.lanehead{font-size:12px;color:var(--mut);margin:14px 0 7px;display:flex;justify-content:space-between}
 code,.mono{font-family:var(--fm);font-size:12px}
 
 .pbar{margin-bottom:8px}
@@ -166,7 +171,7 @@ details .inner b{color:var(--ink)}
   .grid{gap:4px}
 }
 
-/* local progress */
+/* lock screen + sync */
 .gate{position:fixed;inset:0;background:var(--bg);z-index:90;display:grid;place-items:center;padding:20px}
 .gate.off{display:none}
 .gatebox{width:100%;max-width:320px;text-align:left}
@@ -186,15 +191,25 @@ details .inner b{color:var(--ink)}
 </style>
 </head>
 <body>
-<div class="wrap" id="app">
+<div class="gate" id="gate">
+  <div class="gatebox">
+    <h2>Engineering Journey</h2>
+    <p>Enter your code to open the plan.</p>
+    <input id="pw" type="password" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="••••">
+    <button id="pwGo">Unlock</button>
+    <div class="err" id="pwErr"></div>
+  </div>
+</div>
+
+<div class="wrap" id="app" hidden>
   <div class="topbar">
     <div class="brand">
-      <h1>Creator Engine OS</h1>
-      <p id="phaseLine">Build creative products people actually want to use — not just impressive demos</p>
+      <h1>Engineering Journey</h1>
+      <p id="phaseLine">Loading plan…</p>
     </div>
     <div class="countdown">
       <span class="num" id="cdNum">–</span>
-      <span class="lab" id="cdLab">days left in the creative sprint</span>
+      <span class="lab" id="cdLab">days left in the 12-week plan</span>
     </div>
   </div>
 
@@ -208,13 +223,14 @@ details .inner b{color:var(--ink)}
     <button class="btn" id="btnToday">Today</button>
     <button class="btn" id="btnPrev">←</button>
     <button class="btn" id="btnNext">→</button>
-    <input class="search" id="q" placeholder="Search topics, e.g. closures, N+1, RAG">
+    <input class="search" id="q" placeholder="Search topics, e.g. closures, N+1, RAG, AWS">
     <select class="search" id="filterCat"><option value="">All categories</option></select>
     <select class="search" id="filterKind">
       <option value="">All types</option>
       <option value="coding">Coding</option><option value="theory">Theory</option>
       <option value="interview">Interview</option><option value="ai">AI</option>
       <option value="project">Project</option><option value="revision">Revision</option>
+      <option value="career">Career</option>
     </select>
     <select class="search" id="filterStatus">
       <option value="">Any status</option><option value="planned">Planned</option>
@@ -222,6 +238,7 @@ details .inner b{color:var(--ink)}
       <option value="backlog">Backlog</option>
     </select>
     <span class="grow"></span>
+    <button class="btn" id="btnSync"><span class="syncdot" id="syncDot"></span><span id="syncTxt">Sync</span></button>
     <button class="btn" id="btnReview">Weekly review</button>
     <button class="btn" id="btnExport">Export</button>
     <button class="btn" id="btnImport">Import</button>
@@ -240,7 +257,7 @@ details .inner b{color:var(--ink)}
         </div>
         <div id="calArea"></div>
         <div class="legend" id="legend"></div>
-        <p class="hint">Click any day to open it. Inside a day you can complete tasks, push them to backlog, mark the whole day a holiday, or add notes — the rest of the 12 weeks reflows around your change.</p>
+        <p class="hint">Two lanes per day: a study block (~2h) and a separate project hour (longer on weekends). Sundays are buffer days — no new material, only revision, backlog, career and project work. Weeks 13–16 are the portfolio sprint: the study lane is free and projects get ~3h a day. Click any day to open it; complete, backlog or mark holidays and the plan reflows.</p>
       </div>
 
       <div class="panel" style="margin-top:20px" id="searchPanel" hidden>
@@ -286,24 +303,32 @@ details .inner b{color:var(--ink)}
 
 <script>
 /* ============================================================
-  Engineering Journey — 12-week capability roadmap
-  Single file. Progress persists in localStorage and can be
-  moved between devices with Export / Import.
+   Engineering Journey — 3-month training OS  (v2)
+   Single file. No backend. State persists in localStorage
+   (falls back to in-memory if storage is blocked).
+   v2: separate project lane, Sunday buffer days, testing / AWS /
+   Python / security / realtime / modern-AI modules, career track.
    ============================================================ */
 const PLAN_DAYS = 84;        // 12 weeks
 const HORIZON   = 170;       // scheduling horizon incl. overflow
-const CAP = [90,120,120,120,120,120,150]; // Sun..Sat daily study minutes
+const CAP  = [90,120,120,120,120,120,150]; // Sun..Sat study-lane minutes
+const PCAP = [120,60,60,60,60,60,90];      // Sun..Sat project-lane minutes (separate daily project hour)
+const PCAP_POST = [240,180,180,180,180,180,240]; // portfolio sprint (after day 84): study lane is free, projects get the time
+const PHASE4_END = 111;      // weeks 13-16: portfolio sprint
+const BUFFER_DOW = 0;        // Sunday: no new material — revision, backlog, career and project only
+const SESSION_MIN = 60;      // one project session
 const REV_OFFSETS = [3,7,21,45];
 const REV_MIN     = [15,20,25,30];
 const REV_LABEL   = ['Recall pass','Practice problem','Interview drill','Advanced application'];
 
-const CATS = ["JavaScript","TypeScript","React","Next.js","Node.js","Express","SQL","PostgreSQL","Prisma","Git","Docker","DevOps","System Design","AI","LLMs","RAG","Projects","Interview"];
-const CATCOLOR = {JavaScript:'--js',TypeScript:'--ts',React:'--react','Next.js':'--next','Node.js':'--node',Express:'--node',SQL:'--sql',PostgreSQL:'--sql',Prisma:'--sql',Git:'--prod',Docker:'--prod',DevOps:'--prod','System Design':'--iv',AI:'--ai',LLMs:'--ai',RAG:'--ai',Projects:'--proj',Interview:'--iv',Revision:'--rev',Valorant:'--game'};
-const KINDLABEL = {coding:'Coding',theory:'Theory',interview:'Interview',ai:'AI',project:'Project',revision:'Revision'};
+const CATS = ["JavaScript","TypeScript","React","Next.js","Node.js","Express","SQL","PostgreSQL","Prisma","Git","Docker","DevOps","AWS","Testing","Security","Python","System Design","AI","LLMs","RAG","Projects","Interview","Career"];
+const CATCOLOR = {JavaScript:'--js',TypeScript:'--ts',React:'--react','Next.js':'--next','Node.js':'--node',Express:'--node',SQL:'--sql',PostgreSQL:'--sql',Prisma:'--sql',Git:'--prod',Docker:'--prod',DevOps:'--prod',AWS:'--cloud',Testing:'--test',Security:'--sec',Python:'--py','System Design':'--iv',AI:'--ai',LLMs:'--ai',RAG:'--ai',Projects:'--proj',Interview:'--iv',Career:'--car',Revision:'--rev',Valorant:'--game'};
+const KINDLABEL = {coding:'Coding',theory:'Theory',interview:'Interview',ai:'AI',project:'Project',revision:'Revision',career:'Career'};
 const PHASES = [
   {n:1,name:'Fundamentals — JavaScript, TypeScript, React, Next.js',from:0,to:34},
   {n:2,name:'Backend, data and production engineering',from:35,to:62},
-  {n:3,name:'AI / LLM engineering and interview conversion',from:63,to:83}
+  {n:3,name:'AI / LLM engineering and interview conversion',from:63,to:83},
+  {n:4,name:'Portfolio sprint — Chitthi, Post-Plant, Doppelgänger, Hindsight AI',from:84,to:PHASE4_END}
 ];
 
 /* ---------- curriculum builder ---------- */
@@ -347,14 +372,18 @@ T('js-errors','Error handling, custom errors and async failure paths','JavaScrip
 "try/catch with await, unhandled rejections, custom Error subclasses, error causes, and why throwing non-Errors loses stack traces.|Production reliability is mostly error taxonomy: knowing which failures are retryable, which are user-facing and which should page someone.|Build an AppError base class with statusCode and isOperational, then wrap a flaky async call with retry plus exponential backoff and jitter.|Write withRetry(fn, {retries, backoff}) that only retries retryable errors and gives up cleanly, preserving the original stack.|'How do you handle errors in async code', 'what happens to an unhandled rejection in Node' — 3-5 YOE territory.");
 T('js-iterators','Iterators, generators and async iteration','JavaScript','coding',45,'med',3,'js-promises',5,
 "Symbol.iterator, generator functions, lazy evaluation, and for await...of over streams.|Streaming LLM responses, paginated API cursors and large file processing are all async iteration problems you will hit in Phase 3.|Write a generator that yields paginated API results and a for await consumer that stops early, then check that the underlying request is cancelled.|Build a takeUntil(asyncIterable, predicate) helper and use it against a mock streaming response.|Comes up when discussing streaming responses and memory-safe processing of large datasets.");
-T('p1-arch','Palimpsest — problem framing and architecture','Projects','project',90,'high',3,'js-async-await',9,
-"Write the one-page brief for Project 1: the problem, two user personas, the core loop, and a C4-style container diagram (Next.js app, Node worker, Postgres+pgvector, Redis, object storage).|A project you can defend architecturally is worth more in interviews than three projects you can only demo; the brief is what you will talk from.|Draft it in the repo README: problem statement, non-goals, personas, container diagram (Mermaid), and the three riskiest technical unknowns.|Write the 90-second pitch and the 5-minute deep dive as separate sections; read both aloud and cut anything you cannot defend.|Every interview ends with 'tell me about a project' — this document is the source of that answer.");
+T('git-pro','Git for teams: rebase, bisect and clean history','Git','coding',45,'med',2,'',6,
+"Interactive rebase, merge vs rebase, conflict resolution, cherry-pick, reflog recovery, bisect, and commit/PR hygiene.|Your commit history is visible in every portfolio repo, and 'how would you find which commit broke this' is a common practical question.|Rewrite a messy branch into clean logical commits with interactive rebase, then recover a deleted branch with reflog.|Use git bisect to find a deliberately introduced bug across 20 commits.|'How do you resolve a conflict' and 'merge or rebase' — have a reasoned team-context answer.");
+T('p1-arch','Palimpsest — positioning, problem framing and architecture','Projects','project',90,'high',3,'',9,
+"Write the one-page brief: the problem, two personas, the core loop, and a C4-style container diagram (Next.js app, Node worker, Postgres+pgvector, Redis, object storage). Add a competitor scan (Unblocked, Glean, Sourcegraph Cody, Swimm, CodeRabbit) and a one-sentence differentiator: decisions are first-class entities with provenance, and new pull requests are checked against them — not chat over documents.|The space is crowded, so 'how is this different from X' is guaranteed. A project you can position and defend architecturally is worth more than three you can only demo.|Draft it in the README: problem, non-goals, personas, differentiator, container diagram (Mermaid), the three riskiest unknowns, and the priority order — (1) cited Q&A over decisions, (2) evals, (3) deploy, (4) contradiction check, (5) everything else is a bonus. Set up the monorepo, lint, typecheck and a CI skeleton in the last session.|Write the 90-second pitch and the 5-minute deep dive; read both aloud and cut anything you cannot defend. Rehearse the answer to 'why not just use Unblocked or Glean'.|Every interview ends with 'tell me about a project' — this document is the source of that answer.");
+T('p1-corpus','Palimpsest — real demo corpus from a public project','Projects','project',60,'critical',2,'p1-arch,js-async-await',9,
+"Pick a public project whose reasoning lives in its history and fetch it as raw fixtures: Rust RFCs, React RFCs, Kubernetes KEPs or Python PEPs, plus the GitHub pull requests and issue threads that discuss and later touch them. Store everything as versioned JSON with source URLs so every citation is clickable.|A demo on an empty or synthetic corpus falls flat; real, messy, public data turns the project from a toy into evidence and lets an interviewer verify answers themselves.|Write a resumable fetch script against the GitHub API (pagination, rate-limit backoff, ETags), normalise into documents with author, date, links and licence, and commit a small sample set plus the script (not the full dump).|Hand-pick 20 decisions from the corpus and write their 'why' in one sentence each — this becomes the seed of your golden evaluation set.|'Where did your data come from and how did you know the answers were right' — real corpus plus hand-labelled seed set.");
 T('iv-w2','Interview set 2 — async ordering and promise internals','Interview','interview',60,'high',3,'js-eventloop,js-promises',9,
 "Output-ordering drills plus one live implementation: Promise.allSettled from scratch.|You must be fast and calm on event-loop ordering; hesitation here reads as shaky fundamentals no matter how good your projects are.|Timed 45 minutes: 8 ordering questions, then implement allSettled without looking anything up, then explain your solution aloud.|Explain to an imaginary interviewer why a microtask starves rendering, using a concrete example.|Directly mirrors round-one frontend screens at product companies.");
 T('js-week2-consolidate','Async consolidation — write the model down','JavaScript','revision',45,'med',2,'js-errors',6,
 "Produce one diagram and one page covering stack, queues, promise states, await suspension points and error propagation.|If you can draw the event loop from memory in 60 seconds, you can answer any variation of the question.|Redraw the loop from a blank page, then annotate where await, then, setTimeout and I/O callbacks enter it.|Re-solve the concurrency limiter without notes and compare against your earlier version.|Whiteboard-drawing the runtime is a strong differentiator at mid level.");
 
-/* ============ WEEK 3 — TypeScript + Project 1 data model ============ */
+/* ============ WEEK 3 — TypeScript + Project 1 data model + testing ============ */
 T('ts-basics','TypeScript foundations: inference over annotation','TypeScript','coding',60,'high',2,'js-objects',7,
 "Structural typing, inference, literal vs widened types, readonly, and when an explicit annotation actually helps.|Over-annotated code is a junior tell; strong TS leans on inference and annotates boundaries only.|Convert one of your week-1 utility files to TS with strict mode on and remove every annotation the compiler can infer.|Type memoize() so the returned function keeps the original signature exactly.|'When would you annotate vs infer' and 'what is structural typing' show TS maturity fast.");
 T('ts-shapes','Interfaces, type aliases, unions and intersections','TypeScript','coding',60,'high',2,'ts-basics',7,
@@ -365,7 +394,9 @@ T('ts-generics','Generics, constraints and conditional types','TypeScript','codi
 "Type parameters, extends constraints, keyof/typeof, indexed access, mapped types, conditional types and infer.|Generic helpers are how you write library-grade code; interviewers use them to separate TS users from TS engineers.|Build a typed pick(obj, keys), a DeepPartial<T> and an ApiResult<T> wrapper, testing each against wrong inputs.|Write a typed event emitter where on('user:created', cb) infers the exact payload type from a map.|'Write a generic that…' is a common live-coding task for senior frontend roles.");
 T('ts-utility','Utility types and end-to-end typed API layer','TypeScript','coding',60,'high',3,'ts-generics',7,
 "Partial, Required, Pick, Omit, Record, ReturnType, Awaited, satisfies — and how to share types across client and server.|A typed client-server contract removes an entire category of bugs and is exactly the kind of engineering decision interviewers probe.|Define request/response types once, derive client function signatures from them, and validate at runtime with zod inferring the same type.|Build a typed fetch wrapper: apiGet<'/users/:id'>() infers params and the response shape from a route map.|'How do you keep frontend and backend types in sync' — great answer material for full-stack roles.");
-T('p1-schema','Palimpsest — Postgres schema and access patterns','Projects','project',90,'high',3,'p1-arch,ts-shapes',8,
+T('test-unit','Unit testing with Vitest: structure, mocks and coverage','Testing','coding',60,'high',2,'ts-utility',8,
+"Arrange-act-assert, test naming, describe/it structure, vi.fn and vi.mock, fake timers, snapshot tests used sparingly, and what coverage does and does not tell you.|'How do you test this' follows almost every coding answer at 3-5 YOE; a candidate with no testing habit reads as junior regardless of skill.|Add Vitest to your utilities repo and test debounce (with fake timers), deepClone (edge cases) and withRetry (mocked failures).|Reach 90% branch coverage on withRetry, then write one test that coverage says is unnecessary but that catches a real bug.|'What makes a good unit test', 'mock vs stub vs spy', 'how do you test time-dependent code'.");
+T('p1-schema','Palimpsest — Postgres schema and access patterns','Projects','project',90,'high',3,'p1-arch,ts-basics',8,
 "Design the relational model: workspaces, sources, documents, chunks (with vector column), decisions, decision_links, users, memberships, audit_log — driven by the queries you must serve.|Schema-first thinking (queries then tables, not tables then queries) is a hallmark of engineers with real production experience.|Write the ERD, then write the five hottest queries in raw SQL before touching an ORM, and note which indexes each needs.|List every access pattern with expected cardinality, then justify each index; decide the pgvector index type and why.|'Walk me through your schema' — you want to answer with access patterns and tradeoffs, not table names.");
 T('iv-w3','Interview set 3 — TypeScript and data modelling','Interview','interview',60,'high',3,'ts-generics',8,
 "Half TS (generics, narrowing, unknown), half modelling: design types for a multi-tenant document system.|Combining type design with domain modelling is exactly what mid-level full-stack interviews test.|45-minute timed set; write the types in an editor with strict mode and let the compiler grade you.|Explain aloud why you chose a discriminated union over optional fields in your model.|Mirrors the take-home-style discussions used for 3-5 YOE screening.");
@@ -387,12 +418,16 @@ T('react-hooks','Custom hooks and reusable logic','React','coding',60,'high',3,'
 "Extract stateful logic into hooks with clean APIs; rules of hooks and why they exist; testing hooks in isolation.|Custom hooks are the main reuse mechanism in modern React and a natural live-coding exercise.|Write useLocalStorage, useDebouncedValue and useAsync (with cancel + error) and use all three in one small screen.|Build useIntersectionObserver and use it for infinite scroll with proper cleanup.|'Write a custom hook that…' is a very common 30-minute pairing task.");
 T('react-forms','Forms, controlled inputs and validation','React','coding',45,'med',2,'react-state',6,
 "Controlled vs uncontrolled inputs, validation timing, error surfacing, and shared client/server validation schemas.|Forms are where UX, typing and backend contracts meet — a realistic ground for full-stack questions.|Build a multi-field form with zod validation, field-level errors and a disabled-until-valid submit, reusing the server's schema.|Add optimistic submit with rollback on failure and a duplicate-submit guard.|'How would you handle validation on both sides' pairs with your TS API-layer answer.");
+T('test-react','Testing React: Testing Library and user-centric tests','Testing','coding',60,'high',3,'react-hooks,test-unit',8,
+"Query by role and label rather than test ids, user-event over fireEvent, async findBy queries, testing custom hooks with renderHook, and mocking network with MSW.|Component tests that break on every refactor are worse than none; tests that mirror user behaviour survive refactors and catch real regressions.|Test your form (validation, optimistic submit, rollback) and useAsync (cancel + error) with Testing Library and MSW.|Rewrite one brittle implementation-detail test into a behaviour test and note why the new one survives a refactor.|'How do you test a React component' and 'what do you mock' — answer with the testing trophy, not just unit tests.");
+T('p1-ui','Palimpsest — app shell and core screens','Projects','project',60,'high',3,'react-state',7,
+"Build the frontend skeleton against fixtures from your real corpus: layout, workspace switcher, source list, decision cards with provenance, ask box with a citations panel, and empty/loading/error states. Keep styling minimal — no custom design system.|Having the UI early means every backend milestone becomes visible the day it lands, which keeps motivation and gives you screenshots for the README.|Use typed mock fixtures matching your API types so swapping in the real API later is a one-line change per hook.|Ship the shell to a preview URL (Vercel) at the end of the milestone — the first weekly increment.|Interviewers remember a clean, fast UI; it signals care even in backend-heavy roles.");
 T('iv-w4','Interview set 4 — React deep dive','Interview','interview',60,'high',3,'react-perf,react-hooks',9,
 "Batching, stale closures in effects, keys, memo semantics, plus one live task: build useDebouncedSearch from scratch.|Week 4 is the strong-junior checkpoint; you should now be able to explain React behaviour causally, not descriptively.|Timed 50 minutes, code in a blank file, explain each decision aloud as you type.|Answer 'why does this component re-render' for three different snippets in under two minutes each.|This set is close to a real second-round frontend interview.");
 T('react-week4-consolidate','React consolidation — cause-and-effect notes','React','revision',45,'med',2,'react-hooks',6,
 "One page linking each React symptom to its cause: extra renders, stale values, lost focus, duplicate requests, infinite loops.|Symptom-to-cause tables are how you debug fast under pressure and how you sound experienced when narrating.|Write the table from memory, then verify each row with a small reproduction.|Reproduce and fix two symptoms from the table without looking at your notes.|Debugging narration is a large part of the 3-5 YOE bar.");
 
-/* ============ WEEK 5 — Next.js + Project 2 kickoff ============ */
+/* ============ WEEK 5 — Next.js, server state, web performance + Project 2 kickoff ============ */
 T('next-approuter','App Router, routing and layouts','Next.js','coding',60,'high',2,'react-hooks',7,
 "File-system routing, nested layouts, route groups, dynamic segments, parallel and intercepting routes, and the special files (layout/page/loading/error/not-found).|Layout composition decides what re-renders and what stays mounted across navigation — a real performance lever, not just file organisation.|Build a dashboard with a persistent sidebar layout, a dynamic /projects/[id] route and a modal via an intercepting route.|Add a route group so marketing and app pages use different layouts without changing URLs.|'How does routing differ from React Router' and 'where would you put shared UI' show framework fluency.");
 T('next-rsc','Server Components vs Client Components','Next.js','theory',60,'critical',4,'next-approuter',9,
@@ -405,12 +440,20 @@ T('next-actions','Server actions, mutations and loading states','Next.js','codin
 "Server actions as RPC endpoints, progressive enhancement, useFormStatus/useOptimistic, and validating input on the server every time.|Mutations are where security and UX meet; treating an action as a public endpoint is the mindset interviewers want to hear.|Build a create-and-list flow with a server action, zod validation, optimistic UI and a rollback path on failure.|Add authorisation inside the action and prove that a crafted client request cannot bypass it.|'Are server actions secure' — the right answer is that they are public endpoints and need the same checks as any route.");
 T('next-errors','Loading, streaming and error boundaries','Next.js','coding',45,'med',3,'next-data',6,
 "loading.tsx and Suspense streaming, granular fallbacks, error.tsx boundaries with reset, and not-found handling.|Streaming turns a slow aggregate page into a fast first paint — a strong, measurable answer to 'how would you make this faster'.|Wrap three independent data regions in Suspense with skeletons and watch them stream in the network panel.|Force one region to fail and show the rest of the page surviving via a scoped error boundary.|Pairs well with system-design questions about perceived latency.");
-T('p2-arch','Hindsight FC — problem framing and data strategy','Projects','project',90,'high',3,'p1-schema',9,
-"Define Project 2: audit managerial in-match decisions against counterfactual baselines built from similar historical match states, using open event data.|A project with a genuine algorithmic core gives you a real engineering story instead of a CRUD demo.|Write the brief: the decision-audit question, the open data source and its licence, the match-state representation, and the three hardest technical problems.|Sketch the ingestion pipeline end to end on one page: raw events, normalisation, possession chains, state vectors, cohort retrieval, narrative generation.|'Tell me about the hardest technical problem you solved' — this project is engineered to answer it.");
+T('fe-state','Server state vs client state: TanStack Query and Zustand','React','coding',60,'high',3,'react-context',8,
+"Why fetched data is a cache, not state: TanStack Query keys, staleTime vs gcTime, invalidation, optimistic updates and infinite queries; Zustand for the small amount of genuine client state.|Most Redux-era complexity came from storing server data in client stores; separating the two is the modern, interview-ready opinion.|Replace your useAsync-based fetching with TanStack Query, add optimistic mutation with rollback, and move UI-only state (panels, filters) into a tiny Zustand store.|Implement an infinite, cursor-paginated list with prefetch on hover and correct invalidation after a create.|'Redux vs React Query vs Zustand' — answer with server-state vs client-state, not library popularity.");
+T('fe-perf','Web performance: Core Web Vitals and the rendering pipeline','React','theory',60,'high',3,'next-rsc',8,
+"The browser pipeline (parse, style, layout, paint, composite), reflow vs repaint, LCP/INP/CLS and their usual causes, code splitting, lazy loading, image and font optimisation, and bundle analysis.|'The page is slow' is a frontend system-design staple; answers with metrics and pipeline reasoning beat a list of tips.|Run Lighthouse and the Performance panel on your app, fix the worst LCP and CLS offenders, and record before/after numbers.|Use a bundle analyser to find the largest dependency, lazy-load or replace it, and measure the JS delta.|'What happens when you type a URL and press enter' (frontend half) and 'how would you improve LCP'.");
+T('fe-a11y','Accessibility essentials','React','coding',45,'med',2,'react-forms',6,
+"Semantic HTML first, labels and roles, keyboard navigation and focus management, colour contrast, ARIA only when needed, and testing with axe and a screen reader.|Accessibility is increasingly a hiring checkbox for frontend-heavy roles, and it also makes Testing Library queries work naturally.|Audit your app with axe DevTools, fix every critical issue, and navigate the whole flow with the keyboard only.|Build an accessible modal: focus trap, escape to close, return focus to the trigger, aria-modal.|'How do you make a custom dropdown accessible' — a common frontend round question.");
+T('p2-arch','Hindsight FC — problem framing and MVP scope','Projects','project',90,'high',3,'p1-schema',9,
+"Define Project 2 as an MVP: audit managerial in-match decisions against counterfactual baselines built from similar historical match states, using open event data. In-plan scope is ingestion, the threat model and visualisation; the AI narrative layer is a post-plan stretch.|A project with a genuine algorithmic core gives you a real engineering story instead of a CRUD demo — but only if it ships, which is why the scope is cut hard.|Write the brief: the decision-audit question, the MVP cut line and the three hardest technical problems. Check the current StatsBomb open-data licence terms and attribution requirements and follow them exactly; credit Karun Singh's expected-threat (xT) work as the method you implement and extend. Lead the README with the engineering (ingestion, precompute, caching), not the football.|Sketch the ingestion pipeline end to end on one page: raw events, normalisation, possession chains, state vectors, cohort retrieval, visualisation.|'Tell me about the hardest technical problem you solved' — this project is engineered to answer it.");
+T('p2-ingest','Hindsight FC — event ingestion pipeline','Projects','project',90,'high',4,'p2-arch,js-iterators',8,
+"Build the ingestion: stream large open event JSON, normalise into matches/events/players/teams, make it idempotent and resumable, and batch-insert efficiently.|Handling data that does not fit comfortably in memory, with resumability, is a genuinely senior engineering story.|Implement a streaming parser plus COPY-based bulk load, with a checkpoint table so a crash mid-import resumes safely.|Import 100+ matches, measure throughput, then halve the time and write down exactly what you changed.|'Tell me about a performance problem you solved' — you will have real numbers.");
 T('iv-w5','Interview set 5 — rendering, boundaries and frontend system design','Interview','interview',60,'high',3,'next-rsc,react-perf',9,
 "Server/client boundary reasoning, caching behaviour, plus a design prompt: architect a dashboard that stays fast with 50 widgets.|Frontend system design starts appearing at exactly the level you are targeting.|Timed 50 minutes; produce a diagram and a written tradeoff list, not just talking points.|Defend one decision you would reverse under a different constraint (SEO vs interactivity, freshness vs cost).|Mid-level frontend rounds almost always include one open design prompt.");
 
-/* ============ WEEK 6 — Node.js & Express ============ */
+/* ============ WEEK 6 — Node.js & Express + API testing + resume ============ */
 T('node-runtime','Node runtime: event loop phases, libuv and blocking','Node.js','theory',60,'high',3,'js-eventloop',8,
 "Node's loop phases (timers, pending, poll, check, close), the thread pool, process.nextTick vs microtasks, and what actually blocks.|A single CPU-bound function can freeze an entire Node service — knowing why is a core backend competency.|Benchmark a synchronous hash loop against the same work in a worker thread while serving requests, and compare p99 latency.|Find a blocking call in a sample service, move it off the main thread, and measure the change.|'What happens if you run a heavy computation in Node' and 'how is Node concurrent if it is single-threaded'.");
 T('express-lifecycle','Request lifecycle and middleware design','Express','coding',60,'high',2,'node-runtime',8,
@@ -423,12 +466,22 @@ T('api-validation','Validation, serialisation and error contracts','Express','co
 "Validate at the boundary with a schema, never trust client input, and return a single machine-readable error shape everywhere.|A consistent error contract is what makes a frontend able to handle failures gracefully instead of guessing.|Add zod validation middleware that infers TS types, and a central error formatter producing {code, message, details, requestId}.|Make one validation failure, one auth failure and one unexpected crash all produce the same envelope with different codes.|'How do you handle validation errors across a large API' shows systems thinking.");
 T('api-errors','Centralised error handling and operational vs programmer errors','Express','coding',45,'high',3,'api-validation',8,
 "Distinguish expected failures from bugs, keep stack traces off the wire, catch async errors properly, and shut down cleanly on fatal errors.|Error strategy is directly tied to on-call pain, and interviewers at this level ask about it explicitly.|Implement asyncHandler wrapping, an error middleware that logs with a request id, and a process-level handler for unhandled rejections.|Trigger four failure classes and confirm each is logged once, with the right level and no leaked internals.|'What do you do with an uncaught exception in Node' — the strong answer includes graceful shutdown.");
+T('test-api','Integration testing APIs: Supertest and a real database','Testing','coding',60,'high',3,'express-layers,test-unit',9,
+"Supertest against the Express app, a throwaway Postgres per test run (Docker or Testcontainers), transactional rollback or truncation between tests, factories for fixtures, and contract tests against your OpenAPI.|Integration tests catch the bugs unit tests cannot (SQL, middleware order, auth wiring); being able to explain your test pyramid is a clear mid-level signal.|Write integration tests for register-source and list-documents covering happy path, validation error, auth failure and cross-tenant access.|Make the suite run in CI in under 60 seconds and document how you kept it fast.|'Unit vs integration vs E2E — where do you put your effort and why'.");
 T('p1-backend','Palimpsest — API skeleton and service layer','Projects','project',90,'high',3,'express-layers,p1-schema',8,
-"Stand up the Node service: layered structure, config loading, health endpoint, request logging, error envelope, and the first two real endpoints.|Getting the skeleton right early means every later feature is cheap; this is also the code you will screen-share.|Implement source registration and document listing end to end with validation, tests and an OpenAPI entry.|Add a /healthz that checks Postgres and Redis and returns component-level status.|Screen-shared code quality carries a lot of weight in final rounds.");
+"Stand up the Node service: layered structure, config loading, health endpoint, request logging, error envelope, and the first two real endpoints.|Getting the skeleton right early means every later feature is cheap; this is also the code you will screen-share.|Implement source registration and document listing end to end with validation, tests and an OpenAPI entry, then swap the UI's mock fixtures for the real API.|Add a /healthz that checks Postgres and Redis and returns component-level status.|Screen-shared code quality carries a lot of weight in final rounds.");
 T('iv-w6','Interview set 6 — backend fundamentals','Interview','interview',60,'high',3,'express-layers,api-rest',9,
 "Middleware ordering, layering, idempotency, error strategy, plus a design task: file-upload API with virus scanning and retries.|Week 6 is your backend checkpoint; you should be able to defend structure decisions with reasons.|Timed 50 minutes; write the API contract and a sequence diagram before speaking about implementation.|Explain two failure scenarios and how your design degrades in each.|Very close to a real mid-level backend round.");
+T('car-resume','Resume v1 with quantified project bullets','Career','career',60,'high',2,'p1-arch',8,
+"Rewrite the resume around outcomes: one line of stack, then 3-4 bullets per project using action + scope + number (latency, cost per query, eval score, throughput). One page, ATS-safe formatting.|The resume decides whether any of this preparation gets seen; recruiters spend seconds on it and filter heavily on numbers and keywords.|Write it now even with placeholder numbers; replace each placeholder as the projects produce real measurements. Palimpsest always goes first. Keep two versions: SDE roles list Hindsight FC second (ingestion throughput, algorithm); AI roles drop it and use the space for eval results.|Get two engineers to review it and fix everything both of them flag.|Every bullet must survive 'tell me more about that' — do not write anything you cannot defend in depth.");
+T('car-github','GitHub and LinkedIn profile polish','Career','career',45,'med',1,'car-resume',7,
+"Pin the two projects, write a profile README, add architecture diagrams, green CI badges and live links to each repo README; align the LinkedIn headline and About section with the target role.|Recruiters and hiring managers open GitHub and LinkedIn before replying; a clean profile converts views into callbacks.|Audit each pinned repo as a stranger: can they understand it, run it and see it live within two minutes?|Turn on open-to-work for recruiters only and add 15 target-role keywords to the skills section.|A profile that matches the resume removes doubt in the first screen.");
+T('car-riotkey','Riot developer account and API key application (for Post-Plant)','Career','career',30,'high',1,'',5,
+"Register on the Riot Developer Portal, read the general API policies and the Valorant-specific rules, then apply for a key for Post-Plant describing it as a post-match self-coaching tool. Note the rate limits you are given.|Approval for Valorant match data can take weeks and is not guaranteed, so the application has to go in now, long before the project starts in the portfolio sprint.|Describe exactly what data you read, that everything is post-match only, and that nothing gives an in-match advantage or exposes other players. Save the policy links in the Post-Plant README.|Plan the fallback: if approval has not arrived by week 13, build against recorded fixtures of your own matches and keep the API client behind an interface.|Reading and respecting a platform's terms is itself a good interview story about working with third-party APIs.");
+T('p1-tests','Palimpsest — test suite and CI gates','Projects','project',60,'high',3,'test-api,p1-backend',8,
+"Add the project test pyramid: unit tests for services with fake repositories, Supertest integration tests on a throwaway Postgres, Testing Library tests for key UI flows, all gated in CI.|Tests in a portfolio repo are rare and immediately visible; they also let you refactor fast in the later, more complex milestones.|Wire GitHub Actions to run lint, typecheck, unit and integration tests on every push with a coverage report.|Add a failing-test-first bug fix to the history so the commit log shows the habit.|'How is your project tested' — point at the CI run.");
 
-/* ============ WEEK 7 — auth, security, hardening ============ */
+/* ============ WEEK 7 — auth, security, realtime ============ */
 T('auth-basics','Authentication vs authorisation, sessions vs tokens','Express','theory',60,'critical',3,'api-errors',9,
 "Identity vs permission, stateful sessions vs stateless JWTs, refresh strategies, and where each model breaks.|Auth is the most common source of real security incidents and appears in almost every full-stack interview.|Draw both flows end to end, including logout, token theft and revocation, then decide which fits Palimpsest and write down why.|List what happens on logout in each model, and how you revoke access within 60 seconds.|'JWT or sessions' — the good answer is about revocation, scale and blast radius.");
 T('auth-jwt','JWT in depth: signing, claims, expiry and revocation','Express','coding',60,'high',3,'auth-basics',9,
@@ -439,14 +492,22 @@ T('authz-rbac','Authorisation models: RBAC, ownership and multi-tenancy','Expres
 "Roles vs permissions, resource ownership checks, tenant isolation, and enforcing scope at the data layer rather than the route layer.|Multi-tenant data leaks are catastrophic and are exactly what a workspace-based product like Palimpsest must prevent.|Add workspace scoping to every repository method so a missing tenant filter is impossible by construction, then write tests that attempt cross-tenant reads.|Write a policy function can(user, 'decision:update', resource) and use it in both API and UI.|'How do you stop user A reading user B's data' — answer at the query layer, not the controller.");
 T('api-hardening','Rate limiting, quotas and abuse protection','Express','coding',45,'med',3,'authz-rbac',7,
 "Fixed window vs sliding window vs token bucket, per-user and per-IP keys, Redis-backed counters, and 429 with Retry-After.|LLM endpoints are expensive; rate limiting is both a cost control and an availability control you will actually need.|Implement a Redis token-bucket limiter, load-test it, and confirm limits hold across two app instances.|Add a separate stricter quota for AI endpoints and surface remaining quota in response headers.|'How would you protect this endpoint from abuse' — a natural follow-up to any AI feature.");
+T('sec-owasp','OWASP Top 10 walkthrough on your own code','Security','coding',60,'critical',3,'authz-rbac',9,
+"Broken access control and IDOR, injection (SQL, NoSQL, command), SSRF, insecure file upload, security misconfiguration, vulnerable dependencies, and logging failures — each mapped to a concrete place in a Node/Next app.|Security depth compensates for fewer years of experience, and 'what vulnerabilities would you look for in this code' is a common review-style question.|Attack your own API: attempt an IDOR by changing ids, an SQL injection through a raw query, an SSRF through a URL-import feature and a malicious upload; fix each and add a regression test.|Add npm audit plus a dependency scanner (Dependabot or Snyk) to CI and resolve the high-severity findings.|'How would you secure a URL-fetch feature' — SSRF is a standout answer few candidates give.");
+T('realtime','Realtime: WebSockets vs SSE vs polling, and scaling them','Node.js','coding',60,'high',3,'express-lifecycle',8,
+"Long polling, Server-Sent Events and WebSockets compared on direction, reconnection, proxies and cost; Socket.io rooms and acknowledgements; authenticating a socket; horizontal scaling with Redis pub/sub adapters.|Live progress, notifications and collaborative features all need this, and 'design a chat or notification system' is a top system-design prompt.|Build a progress channel: authenticated socket per user, rooms per workspace, events published from a worker via Redis pub/sub, and a client that reconnects and resyncs missed state.|Run two server instances behind a proxy and prove a worker event reaches a client connected to either instance.|'WebSockets or SSE for this feature, and how do you scale it past one server'.");
 T('obs-logging','Structured logging, request ids and observability basics','DevOps','coding',45,'high',2,'api-errors',7,
 "Structured JSON logs, correlation ids propagated through async work, log levels, and the difference between logs, metrics and traces.|'How would you debug this in production' is a defining 3-5 YOE question, and the answer starts with correlation.|Add pino with a request-id that flows from HTTP through the background worker into the LLM call log line.|Trace one request end to end using only logs, then write down what was missing and add it.|Directly answers 'a user says the app is slow — what do you do first'.");
+T('car-blog1','Write-up 1 — publish a technical post','Career','career',60,'med',2,'sec-owasp',7,
+"Publish one focused post (blog, dev.to or LinkedIn article) from work you actually did: 'Enforcing tenant isolation at the repository layer' or 'Attacking my own API: 4 OWASP bugs I found'.|Public writing gets you found by recruiters, proves communication skill, and gives interviewers something concrete to ask about.|800-1200 words, one diagram, one code snippet, real numbers or real failures; link it from the project README.|Share it in two relevant communities and note which one produced engagement.|'I wrote about this' is a strong, verifiable answer to 'tell me about something you learned recently'.");
 T('p1-auth','Palimpsest — auth, workspaces and tenant isolation','Projects','project',90,'high',4,'authz-rbac,p1-backend',8,
 "Ship real auth: signup, login, session cookies, workspace membership, role-based access and tenant-scoped repositories.|This is the part of the project interviewers probe hardest because it is where bugs are dangerous.|Implement it, then write an explicit test suite that tries to break isolation from every endpoint.|Document the threat model in the README: what an attacker with a valid session for workspace A can and cannot do.|A written threat model is unusual in a portfolio project and lands very well.");
+T('p1-ship-early','Palimpsest — first public deploy (managed hosts)','Projects','project',60,'high',2,'p1-auth',7,
+"Deploy what exists: frontend on Vercel, API and Postgres on a managed host (Render, Railway or Fly), seeded demo workspace, environment config per stage.|Shipping weekly from here on means the final deploy is a non-event and you always have a live link to send.|Set up preview deploys per pull request and a production deploy on main; add the live URL to the README.|Do a cold-start test on your phone and fix the first three things that feel broken.|A live link sent before the interview changes the conversation.");
 T('iv-w7','Interview set 7 — auth and application security','Interview','interview',60,'high',4,'auth-cookies,authz-rbac',9,
-"JWT vs sessions, refresh rotation, CSRF/XSS, tenant isolation, plus a design task: SSO across three internal apps.|Security depth is a strong differentiator when your years of experience are lower than the target band.|Timed 50 minutes; whiteboard the flows including failure and revocation paths.|Answer 'how would this be attacked' for each design you propose.|Security follow-ups are where mid-level candidates usually run out of depth — do not.");
+"JWT vs sessions, refresh rotation, CSRF/XSS, tenant isolation, OWASP, plus a design task: SSO across three internal apps.|Security depth is a strong differentiator when your years of experience are lower than the target band.|Timed 50 minutes; whiteboard the flows including failure and revocation paths.|Answer 'how would this be attacked' for each design you propose.|Security follow-ups are where mid-level candidates usually run out of depth — do not.");
 
-/* ============ WEEK 8 — SQL / PostgreSQL ============ */
+/* ============ WEEK 8 — SQL / PostgreSQL + applications start ============ */
 T('sql-select','SELECT, WHERE, ordering and the mental model of a query','SQL','coding',60,'high',2,'',7,
 "Logical query processing order (FROM, WHERE, GROUP BY, HAVING, SELECT, ORDER BY, LIMIT) and why aliases are not visible in WHERE.|Knowing the evaluation order explains most 'why does this fail' SQL errors and is the base for every later optimisation.|Load a realistic sample database (users, orders, order_items, products) and answer ten questions of increasing complexity.|Write the same result three ways and compare EXPLAIN output for each.|Warm-up question that sets the tone for the whole SQL round.");
 T('sql-joins','JOINs: inner, left, self and the multiplication trap','SQL','coding',60,'critical',3,'sql-select',9,
@@ -463,12 +524,14 @@ T('sql-tx','Transactions, ACID and isolation levels','PostgreSQL','theory',60,'c
 "ACID properties, read committed vs repeatable read vs serializable, dirty/non-repeatable/phantom reads, and MVCC in Postgres.|Concurrency bugs are invisible in development and catastrophic in production; this is prime 3-5 YOE material.|Open two psql sessions and reproduce a lost update, a non-repeatable read and a serialization failure by hand.|Write the same money-transfer transaction at two isolation levels and document what changes.|'What isolation level would you use and why' is a strong senior-flavoured question.");
 T('sql-race','Race conditions, locking and idempotent writes','PostgreSQL','coding',60,'high',4,'sql-tx',9,
 "Pessimistic locking (SELECT FOR UPDATE), optimistic locking with version columns, advisory locks, deadlocks and retry loops.|Double-booking, duplicate charges and double-processed jobs all come from unlocked read-modify-write cycles.|Simulate concurrent seat booking with two clients, break it, then fix it with FOR UPDATE and again with a unique constraint.|Implement a job claim query using FOR UPDATE SKIP LOCKED so multiple workers never take the same job.|'How do two servers avoid processing the same job' — SKIP LOCKED is an impressive, concrete answer.");
-T('p2-ingest','Hindsight FC — event ingestion pipeline','Projects','project',90,'high',4,'p2-arch,sql-index',8,
-"Build the ingestion: stream large open event JSON, normalise into matches/events/players/teams, make it idempotent and resumable, and batch-insert efficiently.|Handling data that does not fit comfortably in memory, with resumability, is a genuinely senior engineering story.|Implement a streaming parser plus COPY-based bulk load, with a checkpoint table so a crash mid-import resumes safely.|Import 100+ matches, measure throughput, then halve the time and write down exactly what you changed.|'Tell me about a performance problem you solved' — you will have real numbers.");
 T('iv-w8','Interview set 8 — SQL and concurrency','Interview','interview',60,'critical',4,'sql-index,sql-tx',10,
 "Write six queries under time pressure (latest per group, HAVING aggregate, anti-join, window running total) then discuss isolation and locking.|SQL is where many full-stack candidates are weakest, so strength here is disproportionately valuable.|Timed 50 minutes with a real database; run every query, do not hand-wave syntax.|Explain one query's plan out loud, including why the index was chosen.|Mid-level backend rounds nearly always include live SQL.");
+T('car-apply1','Applications batch 1 — target list and referrals','Career','career',60,'high',2,'car-github',8,
+"Build the tracker (company, role, source, referrer, date, stage, next action) and a target list of 40 companies in three tiers; send the first 10-15 applications, referral-first.|Applying from week 8 means interviews arrive while your preparation is peaking, not a month after it ends. Referrals convert several times better than cold applications.|Message alumni and ex-colleagues with a short, specific ask plus the resume and a live project link; apply directly only where no referral path exists.|Set a recurring weekly target and log every response so you can see which channel works.|Pipeline math: roughly 10-20% of applications become screens — volume and referrals matter.");
+T('mock1','Live mock interview 1 — with a real person','Interview','interview',60,'high',3,'iv-w8',9,
+"A 45-60 minute mock with a real interviewer (peer, mentor, Pramp or similar): one technical round in the format of your target companies, with written feedback.|Self-drills do not reproduce the pressure of another human watching; weekly live mocks are the fastest way to remove interview nerves.|Record it if they agree, then write down the three moments you hesitated and the answer you should have given.|Turn each weak moment into a flashcard and a follow-up task in this plan (flag the relevant topic shaky).|Real interviewers notice communication before correctness.");
 
-/* ============ WEEK 9 — Prisma, performance, caching, jobs ============ */
+/* ============ WEEK 9 — Prisma, performance, caching, jobs, E2E ============ */
 T('prisma-model','Prisma schema, relations and migrations','Prisma','coding',60,'high',2,'sql-constraints',7,
 "Model definitions, relation fields, implicit vs explicit many-to-many, migration workflow, and how the generated client types work.|An ORM that you understand at the SQL level is a productivity win; one you do not is a performance liability.|Model the Palimpsest schema in Prisma, generate the migration, and read the produced SQL line by line.|Add a migration that changes a column type on a table with data, and write the safe multi-step plan.|'How do you run migrations with zero downtime' — expand/contract is the answer they want.");
 T('prisma-query','Queries, select/include and transactions','Prisma','coding',60,'high',3,'prisma-model',7,
@@ -481,12 +544,22 @@ T('perf-cache','Caching with Redis: strategies and invalidation','DevOps','codin
 "Cache-aside vs write-through, TTL choice, key design, stampede protection (locks, jitter), and invalidation on write.|'Just add Redis' is a junior answer; naming the strategy, the invalidation rule and the failure mode is a mid-level answer.|Add caching to your hottest endpoint, measure the hit rate, then force a stampede with concurrent misses and fix it.|Implement cache-aside with a single-flight lock and explicit invalidation on the relevant mutations.|'What do you cache and how do you invalidate it' — the second half is where people fail.");
 T('jobs-queue','Background jobs, queues and retry semantics','DevOps','coding',60,'high',4,'perf-cache',8,
 "Producer/worker split, at-least-once delivery, idempotent handlers, retries with backoff, dead-letter queues and visibility timeouts.|Any real AI feature is asynchronous; queue semantics are unavoidable at this level.|Add BullMQ (or a Postgres SKIP LOCKED queue) for document ingestion with retries, DLQ and progress events.|Make a handler idempotent so a duplicate delivery cannot double-insert, and prove it by replaying a job.|'What happens if the worker crashes halfway' — describe exactly-once effects via idempotency.");
-T('p1-jobs','Palimpsest — ingestion pipeline and realtime progress','Projects','project',90,'high',4,'jobs-queue,p1-auth',8,
+T('test-e2e','End-to-end testing with Playwright','Testing','coding',60,'high',3,'test-react',7,
+"Playwright test structure, locators by role, auto-waiting, auth state reuse, network interception, trace viewer, and keeping E2E suites small, fast and non-flaky.|A handful of reliable E2E tests on critical paths is what lets a team deploy on Fridays; flaky suites are a classic war story interviewers ask about.|Write E2E tests for signup, upload-a-document and ask-a-question on your deployed preview, running in CI against each pull request.|Make one test flaky on purpose (race on a loading state), diagnose it with the trace viewer, and fix it properly rather than adding a sleep.|'How do you deal with flaky tests' — have a concrete answer.");
+T('car-oss1','Open source contribution 1','Career','career',60,'med',3,'git-pro',7,
+"Find a good-first-issue or documentation gap in a library you actually use (Prisma, TanStack Query, Vercel AI SDK, LangChain.js, zod) and open a small, well-scoped pull request.|A merged PR to a known project is verifiable proof that you can work in someone else's codebase and review process.|Read CONTRIBUTING.md, reproduce the issue, keep the diff minimal, include a test, and respond to review quickly.|Track the PR to merge; if it stalls, pick a second issue rather than waiting.|'Have you worked on a codebase you did not write' — this is the answer.");
+T('car-apply2','Applications batch 2 — follow-ups and new targets','Career','career',45,'high',2,'car-apply1',8,
+"Send the next 10-15 applications, follow up once on every batch-1 application with no response after 7 days, and ask for two more referrals.|Consistency beats bursts; most offers come from the third or fourth week of steady applying.|Tailor the top three resume bullets to each job description before sending.|Update the tracker and write down the response rate by channel.|Screens booked now land in weeks 10-12, when you are most prepared.");
+T('mock2','Live mock interview 2 — backend and SQL','Interview','interview',60,'high',3,'mock1',9,
+"A live mock focused on backend design and live SQL with a real person.|Weekly repetition is what turns rehearsed answers into fluent ones.|Ask the interviewer to push on follow-ups rather than accept the first answer.|Log the three weakest moments and schedule fixes.|Follow-up depth is what separates mid-level from junior in the debrief.");
+T('p1-jobs','Palimpsest — ingestion pipeline and realtime progress','Projects','project',90,'high',4,'jobs-queue,p1-auth,realtime',8,
 "Wire the async ingestion path: upload, queue, parse, chunk, embed, index, with WebSocket progress updates and resumable failures.|This is the backbone of the product and the part with the most interesting failure modes to discuss.|Implement the pipeline with per-stage status persisted to Postgres so the UI can show exactly where a document is.|Kill the worker mid-job and confirm the document resumes without duplicate chunks.|Failure-recovery stories are the most convincing evidence of production thinking.");
 T('iv-w9','Interview set 9 — performance and data access','Interview','interview',60,'high',4,'prisma-n1,perf-cache',9,
 "N+1, index selection, cursor pagination, cache invalidation, queue retries, plus a design task: an activity feed for 10M users.|Week 9 is the mid-level checkpoint; answers should now include numbers and tradeoffs, not just names.|Timed 50 minutes; for each answer state the measurement you would take first.|Give one wrong-but-common answer and explain why it fails, to show depth.|This is close to the real 3-5 YOE bar you are targeting.");
+T('car-blog2','Write-up 2 — a performance or data post','Career','career',60,'med',2,'car-blog1',6,
+"Publish a second post from real measurements: 'Killing an N+1 in Prisma', 'Keyset pagination on 1M rows' or 'SKIP LOCKED as a job queue'.|Two posts make a pattern; recruiters and engineers start to recognise your name.|Include the before/after numbers and the query plan screenshot.|Cross-link it from the project README and your LinkedIn featured section.|Performance stories with numbers are the most reusable interview material you have.");
 
-/* ============ WEEK 10 — production engineering ============ */
+/* ============ WEEK 10 — production engineering + AWS + Python ============ */
 T('linux-basics','Linux, processes and the shell you actually need','DevOps','coding',45,'med',2,'',6,
 "Files and permissions, processes and signals, ports and sockets, journald/logs, and the debugging toolkit: ps, lsof, netstat/ss, df, top, curl, grep.|When production breaks you get a shell, not an IDE; comfort here is the difference between diagnosing and guessing.|Run through a checklist on a VM or container: find the process on a port, tail its logs, check disk and memory, kill and restart it.|Debug a container that exits immediately, using only logs and exit codes.|'The service is down and you have SSH access — what do you type first'.");
 T('docker-basics','Docker: images, layers and multi-stage builds','Docker','coding',60,'high',3,'linux-basics',8,
@@ -499,14 +572,28 @@ T('nginx-pm2','Nginx, reverse proxies and process management','DevOps','coding',
 "Reverse proxy basics, TLS termination, upstreams, timeouts, gzip, proxy headers, static caching, and PM2 clustering vs container replicas.|Understanding what sits in front of your app explains timeouts, 502s and lost client IPs.|Put Nginx in front of the API, set proxy timeouts and forwarded headers, then intentionally cause a 502 and read both sides' logs.|Configure Server-Sent-Event streaming through the proxy without buffering (this matters for LLM streaming).|'A request times out at 60 seconds — where is that coming from'.");
 T('cicd','CI/CD pipelines and safe deployment','DevOps','coding',60,'high',3,'docker-compose',8,
 "Pipeline stages (lint, typecheck, test, build, push, migrate, deploy), caching, environment promotion, and rollback strategy.|Deployment ability is assumed at 3-5 YOE; being able to describe migrations plus rollback is the hard part.|Write a GitHub Actions workflow that builds, tests, pushes an image and runs migrations before deploying.|Describe and rehearse a rollback for a deploy that included a database migration.|'How do you deploy and how do you roll back' — the migration answer is the differentiator.");
+T('aws-core','AWS core: IAM, EC2, S3 and networking basics','AWS','coding',60,'critical',3,'docker-compose',9,
+"IAM users, roles and least-privilege policies; EC2 instances, security groups and key pairs; S3 buckets, presigned upload/download URLs and bucket policies; VPC, subnets and public vs private at a working level; the free-tier and billing alarms.|Most Indian full-stack job descriptions list AWS explicitly; Docker alone will not pass the keyword filter or the 'how would you deploy this' question.|Create a billing alarm first. Then run your API container on EC2 behind a security group, and move Palimpsest uploads to S3 with presigned PUT URLs so files never pass through your server.|Write an IAM policy that lets the app write only to one bucket prefix, and prove a request outside it is denied.|'How do you let users upload large files securely' — presigned URLs is the expected answer.");
+T('aws-managed','AWS managed services: RDS, SQS, Lambda and CloudFront','AWS','coding',60,'high',3,'aws-core,jobs-queue',8,
+"RDS Postgres (backups, parameter groups, connection limits), SQS standard vs FIFO and visibility timeouts, Lambda triggers and cold starts, CloudFront in front of S3 and your app, and Secrets Manager.|Knowing when a managed service beats running it yourself is a system-design tradeoff interviewers want to hear.|Map every Palimpsest component to an AWS service and cost it for 1k and 100k users; then implement one piece for real (an SQS-triggered Lambda that generates document thumbnails).|Compare your BullMQ queue with SQS on delivery semantics, retries, ordering and cost in a short written table.|'Would you use Lambda or a container for this' — answer with duration, concurrency and cold starts.");
 T('prod-debug','Health checks, monitoring and production debugging','DevOps','coding',60,'high',4,'cicd,obs-logging',9,
 "Liveness vs readiness, the four golden signals, alerting thresholds, error tracking, and a repeatable incident triage method.|'Walk me through debugging a production incident' is one of the highest-signal questions in this band.|Add /healthz and /readyz, ship request metrics, then run a written incident drill: symptom, hypotheses, evidence, fix, follow-up.|Write a one-page postmortem for a deliberately induced failure (kill Redis and watch what breaks).|Have one real incident story with a timeline ready to tell in every interview.");
-T('p2-algo','Hindsight FC — possession chains and threat modelling','Projects','project',90,'high',5,'p2-ingest',9,
-"Implement the algorithmic core: segment events into possession chains, compute a pitch-grid expected-threat surface, and derive per-decision value deltas.|A hand-built algorithm with real complexity is the most interview-valuable code in either project.|Build the grid, compute transition values iteratively until convergence, precompute per-match aggregates and store them for fast reads.|Validate outputs against known matches, handle edge cases (set pieces, red cards, stoppages) and document your assumptions.|'Explain an algorithm you implemented' with a whiteboard-able answer is rare and memorable.");
+T('obs-otel','Tracing and error tracking: OpenTelemetry, Sentry, Grafana','DevOps','coding',60,'high',3,'prod-debug',8,
+"Spans and trace context propagation across HTTP, queue and LLM calls with OpenTelemetry; Sentry for errors with release tracking and source maps; one Grafana (or Grafana Cloud) dashboard with latency, error rate and throughput.|Traces answer 'where did the 4 seconds go' in one look; having set them up yourself is concrete production evidence.|Instrument API, worker and LLM client so one user request shows as a single trace across all three; wire Sentry into both Next.js and Node.|Build a dashboard with p50/p95 latency, error rate and LLM cost per hour, and add one alert.|'How would you find which service is slow' — traces, not guesswork.");
+T('py-core','Python for JavaScript developers','Python','coding',60,'high',2,'js-async-await',8,
+"Syntax mapped from JS: types and type hints, list/dict comprehensions, dataclasses, pydantic models, virtual environments and uv/pip, packaging, and asyncio compared with the event loop you already know.|Many AI engineering roles are Python-first; being fluent in both closes off far fewer job openings.|Port your withRetry, memoize and promisePool utilities to Python (the pool with asyncio.Semaphore), fully type-hinted, with pytest tests.|Write a small CLI that ingests a folder of markdown files into structured pydantic objects.|'Are you comfortable in Python?' — show a repo instead of saying yes.");
+T('car-apply3','Applications batch 3','Career','career',45,'high',2,'car-apply2',7,
+"Next 10-15 applications, tier-2 and tier-1 companies now that the projects are live; follow up on batch 2.|Weeks 10-12 are when the stronger portfolio starts to show in response rates.|Include the live link and one quantified result in every referral message.|Update tracker and response rates.|Keep the pipeline full even while interviewing — offers fall through.");
+T('mock3','Live mock interview 3 — system design','Interview','interview',60,'high',4,'mock2',9,
+"A live system-design mock with a real person: one open prompt, 45 minutes, your fixed structure.|Design rounds need a live audience to practise pacing and handling interruptions.|Ask for a hard pivot mid-way (10x scale or a new constraint) to practise adapting.|Log what you skipped and where you ran over time.|Design is the round that decides the level of the offer.");
+T('p2-algo','Hindsight FC — possession chains and xT, implemented and validated','Projects','project',90,'high',5,'p2-ingest',9,
+"Implement the algorithmic core: segment events into possession chains, fit a pitch-grid expected-threat surface by iterating transition values to convergence (Karun Singh's xT method — implemented and extended, never presented as novel), and derive per-decision threat deltas with bootstrapped confidence intervals.|A hand-built algorithm with honest uncertainty is the most interview-valuable code in this project; overclaiming is the fastest way to lose a sharp interviewer.|Unit-test the convergence (known small grid with a hand-computed answer), compare your surface against published xT grids, and handle edge cases (set pieces, red cards, stoppages). Report a delta only when the sample size clears a minimum threshold.|Write the limitations section now: similar states are not a controlled experiment; team quality, fatigue and score effects confound; list what you control for and what you do not.|'Is that causal?' — no, and here is exactly why, and here is what the confidence band means.");
+T('p2-deploy','Hindsight FC — MVP: visualisation, caching, deploy and limitations','Projects','project',90,'med',4,'p2-algo',7,
+"Finish the MVP surface: pitch-grid visualisation, decision timeline, search, cached precomputed aggregates and a public deployment.|Visualisation makes the algorithm legible in a demo; caching makes it fast enough to demo at all. Shipping the MVP here keeps the AI layer optional.|Precompute per-match aggregates on ingest, cache hot reads in Redis, and render the threat surface and timeline in the UI.|Load-test the two heaviest endpoints and record p95 before and after caching; put ingestion throughput, precompute time and p95 in the README metrics table, next to the limitations section and data attribution.|Pitch it as an engineering project that happens to use football data — throughput, precompute strategy and caching first.");
 T('iv-w10','Interview set 10 — systems and production','Interview','interview',60,'high',4,'prod-debug,cicd',9,
-"Docker networking, deploy and rollback, incident triage, plus a system design: multi-tenant document processing at 10k docs/day.|System design is now the main gap between you and a 3-5 YOE offer; practise the structure, not just the content.|Use a fixed structure: requirements, constraints, API, data model, components, scaling, failure modes, tradeoffs — 45 minutes.|Do the whole thing on paper and then critique your own design for the weakest point.|Design rounds reward structure and explicit tradeoffs far more than novelty.");
+"Docker networking, deploy and rollback, AWS service choice, incident triage, plus a system design: multi-tenant document processing at 10k docs/day.|System design is now the main gap between you and a 3-5 YOE offer; practise the structure, not just the content.|Use a fixed structure: requirements, constraints, API, data model, components, scaling, failure modes, tradeoffs — 45 minutes.|Do the whole thing on paper and then critique your own design for the weakest point.|Design rounds reward structure and explicit tradeoffs far more than novelty.");
 
-/* ============ WEEK 11 — LLM fundamentals ============ */
+/* ============ WEEK 11 — LLM fundamentals + Python AI ============ */
 T('llm-tokens','Tokens, context windows and cost mechanics','LLMs','ai',60,'critical',2,'',9,
 "Tokenisation, why token count is not word count, context window budgeting (system + history + retrieved context + output), truncation strategies and per-token pricing.|Every AI cost, latency and 'the model forgot' bug is a context-budget problem; engineers who cannot count tokens cannot control spend.|Tokenise real inputs with a tokeniser library, build a budget spreadsheet for one Palimpsest request, and compute cost per 1k requests.|Write a context builder that fits system prompt, chat history and retrieved chunks into a fixed budget with a documented drop policy.|'How would you reduce the cost of this feature' — answer with token maths, not vibes.");
 T('llm-params','Messages, system prompts and sampling parameters','LLMs','ai',60,'high',2,'llm-tokens',8,
@@ -517,48 +604,147 @@ T('llm-tools','Function/tool calling and the agent loop','LLMs','ai',60,'critica
 "How tool schemas are exposed, the call/execute/return loop, multi-step tool use, tool errors, and hard limits on iterations and side effects.|Tool calling is the bridge between the model and your real system, and it carries every authorisation and safety concern with it.|Implement three tools (SQL-backed search, document fetch, decision-link creation), run a multi-step loop, and log every call with arguments and duration.|Add authorisation checks inside each tool, an iteration cap, and a deterministic fallback when the model loops.|'How do you stop an agent doing something destructive' — permissions at the tool boundary.");
 T('llm-stream','Streaming responses end to end','LLMs','ai',45,'high',3,'llm-tools',7,
 "Server-sent events vs chunked responses, backpressure, cancellation on client disconnect, partial-JSON handling and proxy buffering.|Streaming is the difference between a product that feels instant and one that feels broken, and it is a full-stack problem.|Stream a completion from provider to Node to Next.js client with abort support, then confirm the upstream request is actually cancelled.|Handle a mid-stream error so the UI shows a partial answer plus a clear failure state rather than hanging.|'Why did the stream work locally but not behind Nginx' — proxy buffering is a great war story.");
+T('llm-testing','Testing LLM features: mocks, fixtures and prompt snapshots','Testing','ai',45,'high',3,'llm-structured,test-unit',8,
+"Deterministic tests around a non-deterministic component: mocking the provider client, recorded fixtures for replay, snapshotting rendered prompts so changes show in review, schema tests on outputs, and separating unit tests from evals.|Teams ship prompt changes that silently break production; showing a testing strategy for LLM code is a strong senior signal.|Wrap your LLM client behind an interface, add a fake for unit tests, record real responses as fixtures, and snapshot the final prompt for three request types.|Change a prompt template and confirm the snapshot diff makes the change obvious in a pull request.|'How do you test code that calls an LLM' — mock for logic, evals for quality.");
 T('emb-basics','Embeddings and vector similarity','AI','ai',60,'critical',3,'llm-tokens',9,
 "Embeddings as semantic coordinates, cosine vs dot vs euclidean, dimensionality, model choice, normalisation and the limits of semantic similarity.|Retrieval quality is capped by embedding quality; understanding the geometry explains why some searches fail.|Embed 200 real sentences, compute a similarity matrix, and inspect the nearest neighbours for five queries to find where it fails.|Show a case where lexical search beats vector search, and explain why hybrid retrieval exists.|'What is an embedding' then 'why did retrieval return the wrong document'.");
 T('emb-chunk','Chunking strategies and metadata design','AI','ai',60,'critical',3,'emb-basics',9,
 "Fixed vs recursive vs semantic vs structure-aware chunking, overlap, chunk size tradeoffs, and metadata that enables filtering.|Chunking is where most RAG systems quietly fail; it is the highest-leverage tuning decision in the pipeline.|Chunk the same document four ways, run identical queries against each, and score retrieval quality on a 20-question set.|Design the metadata schema for Palimpsest chunks (source, author, timestamp, decision id, permissions) and enforce filters at query time.|'How did you choose your chunk size' — answer with an experiment, not a default.");
+T('p1-rag','Palimpsest — embeddings, hybrid retrieval and citations','Projects','project',60,'critical',4,'emb-chunk,p1-jobs',10,
+"Add the retrieval layer: structure-aware chunking, embeddings with content-hash dedupe, pgvector HNSW index, full-text + vector hybrid search fused by reciprocal rank, and answers that cite chunk ids.|Retrieval quality caps everything the AI layer can do; getting this solid first means the decision-graph work is building on something measurable.|Build a 40-question golden set as you go and score recall@k after every change.|Re-ingest a changed document and prove only changed chunks are re-embedded.|'How did you evaluate your retrieval' — show the before/after table.");
 T('vecdb','Vector storage: pgvector, indexes and hybrid search','AI','ai',60,'high',4,'emb-chunk',9,
 "Storing vectors in Postgres, HNSW vs IVFFlat, recall/latency tradeoffs, metadata filtering, and hybrid search combining BM25/full-text with vectors.|Choosing one database over a separate vector store is a real architectural tradeoff you should be able to defend.|Add pgvector to your project, build an HNSW index, and benchmark recall and p95 latency across index parameters.|Implement hybrid search with reciprocal rank fusion and compare it against pure vector search on your question set.|'Why pgvector instead of a dedicated vector database' — operational simplicity vs specialised scale.");
+T('py-llm','Python AI services: FastAPI, pydantic and LLM SDKs','Python','ai',60,'high',3,'py-core,llm-structured',8,
+"FastAPI routing and dependency injection, pydantic request/response models, async endpoints, streaming responses, calling LLM SDKs from Python, and structured output validated by pydantic.|Python is the default language of AI teams; a small, clean FastAPI service shows you can join one on day one.|Build a standalone FastAPI service that does document parsing and chunking (bonus: plug it into Palimpsest only if priorities 1-4 are done), with pydantic-validated output and pytest tests.|Add a streaming /summarise endpoint and consume it from Node with cancellation.|'Why split this into a Python service' — the answer is ecosystem (parsers, ML libraries), with the cost being an extra network hop.");
+T('car-blog3','Write-up 3 — an AI engineering post','Career','career',60,'med',2,'car-blog2',8,
+"Publish an AI post from your own numbers: 'How I evaluated chunking strategies', 'Hybrid search with pgvector and RRF' or 'Token budgeting for a RAG app'.|AI-engineering writing with real measurements is rare and gets shared — it is the highest-leverage post of the four.|Include a results table and the exact setup so someone could reproduce it.|Post it where AI engineers read (LinkedIn, relevant communities) and reply to every comment.|Interviewers for AI roles often read these before the call.");
+T('car-apply4','Applications batch 4 — AI-focused roles','Career','career',45,'high',2,'car-apply3',7,
+"Target AI/LLM engineer and full-stack-with-AI roles specifically now that the RAG work is live; next 10-15 applications plus follow-ups.|The AI layer is your differentiator — lead with it for these roles.|Swap the resume's top bullet to the retrieval evaluation result for AI roles.|Update tracker; prioritise screens over new applications if the calendar fills.|AI roles often ask for a demo — keep one ready.");
+T('mock4','Live mock interview 4 — AI system design','Interview','interview',60,'high',4,'mock3',9,
+"A live mock on an AI system-design prompt (RAG for 5k employees, or an agent that files tickets) with a real person.|AI design rounds are new for most interviewers too — clear structure plus evaluation and cost answers stand out.|Include latency budget, cost per query, evaluation plan and security (prompt injection) without being asked.|Log the follow-ups you could not answer.|This is the round that differentiates you from generic full-stack candidates.");
+T('car-oss2','Open source contribution 2','Career','career',60,'med',3,'car-oss1',6,
+"A second, slightly larger contribution — ideally to an AI tooling library you used in the projects (a bug fix, an example, a docs improvement with code).|Two merged PRs show a habit rather than a one-off.|Pick something you hit while building; your reproduction is already done.|Link both PRs from the resume under the projects section.|Easy follow-up talking point: 'what was the review process like'.");
 T('iv-w11','Interview set 11 — AI engineering fundamentals','Interview','interview',60,'high',4,'llm-tools,emb-chunk',9,
 "Tokens and cost, structured output reliability, tool-call safety, embeddings and chunking tradeoffs, plus a design: internal document assistant for 5k employees.|AI-engineering questions are new enough that strong, specific answers stand out sharply.|Timed 50 minutes; include cost per query and latency budget in your design.|Answer 'how do you know it works' with an evaluation plan, not an assurance.|This is where you differentiate from every other full-stack candidate.");
 
-/* ============ WEEK 12 — RAG, agents, safety, conversion ============ */
+/* ============ WEEK 12 — RAG, agents, modern AI stack, conversion ============ */
 T('rag-pipeline','RAG end to end: parse, chunk, embed, retrieve, ground','RAG','ai',90,'critical',4,'vecdb',10,
 "Build the full pipeline: document parsing, cleaning, chunking, embedding, indexing, query rewriting, retrieval, reranking, context construction, grounded generation with citations.|RAG is the default architecture for applied LLM products and the thing you will be asked to whiteboard.|Implement the whole path in Palimpsest, logging retrieved chunks and scores for every answer so failures are debuggable.|Draw the pipeline from memory and mark the three stages most likely to cause a wrong answer.|'Design a RAG system' is the most common AI system-design prompt right now.");
 T('rag-retrieval','Retrieval quality: rewriting, reranking and context construction','RAG','ai',60,'high',4,'rag-pipeline',9,
 "Query rewriting and expansion, HyDE, multi-query retrieval, cross-encoder reranking, deduplication, ordering and the lost-in-the-middle effect.|Naive top-k retrieval is a demo; the gap between demo and product is entirely in this layer.|Add rewriting plus reranking to your pipeline and measure the change in answer accuracy on a fixed question set.|Build the context string deliberately: dedupe, order by relevance and recency, label each chunk with its source for citation.|'How would you improve a RAG system that gives vague answers' — a very practical follow-up.");
 T('rag-eval','Evaluating RAG: datasets, metrics and regression testing','RAG','ai',60,'critical',4,'rag-retrieval',10,
 "Retrieval metrics (recall@k, MRR), answer metrics (faithfulness, relevance), golden datasets, LLM-as-judge and its biases, and CI regression gates.|'How do you know it works' is the question that separates AI engineers from people who wired up an API.|Build a 40-question golden set for Palimpsest with expected sources, then score retrieval and faithfulness before and after one change.|Add an eval script to CI that fails the build if faithfulness drops below your threshold.|Bring the numbers to the interview — almost nobody does.");
+T('ai-evaltools','Eval and LLM-observability tooling: promptfoo and Langfuse','AI','ai',45,'high',3,'rag-eval',8,
+"promptfoo for declarative eval suites and prompt comparisons in CI; Langfuse (or similar) for traces, prompt versions, per-request cost and user feedback scores in production.|Hand-rolled eval scripts do not scale to a team; knowing the standard tooling shows you have seen how AI features are run in practice.|Port your golden-set eval into promptfoo, compare two prompt versions side by side, and send production traces with cost and latency to Langfuse.|Wire a thumbs-up/down in the UI into Langfuse scores and build a view of the worst-rated answers.|'How do you monitor answer quality after launch' — offline evals plus online feedback.");
 T('rag-halluc','Hallucination reduction and grounded answering','RAG','ai',60,'high',4,'rag-eval',9,
 "Citation enforcement, abstention when evidence is weak, confidence signals, answer verification passes and surfacing sources in the UI.|A system that says 'I do not know' correctly is more valuable than one that always answers, especially for internal knowledge tools.|Make every answer cite chunk ids, then add a verification step that rejects claims without support and re-asks.|Deliberately ask questions the corpus cannot answer and confirm the system abstains rather than inventing.|'How do you prevent hallucinations' — answer with grounding, abstention and evaluation.");
 T('ai-security','Prompt injection, guardrails and AI security','AI','ai',60,'critical',4,'llm-tools',10,
 "Direct and indirect prompt injection, untrusted retrieved content as an attack surface, tool-permission scoping, output sanitisation, PII handling and rate/cost abuse.|Indirect injection through ingested documents is the defining security problem of RAG systems and a standout interview topic.|Plant a malicious instruction inside a document, ingest it, and watch your assistant obey it — then defend with content separation, tool scoping and output checks.|Write the AI threat model section of your README: attacker goals, entry points, mitigations and residual risk.|'What happens if a document contains instructions for the model' — very few candidates have a real answer.");
+T('ai-mcp','Model Context Protocol: build and secure an MCP server','AI','ai',60,'high',3,'llm-tools,ai-security',8,
+"What MCP standardises (tools, resources, prompts), transports (stdio vs HTTP), the client-server lifecycle, and the security model: auth, scoping tools per user, and treating tool output as untrusted.|MCP is becoming the standard way AI apps connect to internal systems; having shipped a server is a concrete, current differentiator.|Build a small MCP server (bonus: point it at Palimpsest only once priorities 1-4 ship) with three tools (search decisions, fetch decision, list recent contradictions), authenticated per workspace, and use it from an MCP-capable client.|Add per-tool authorisation and argument validation, and write down what an injected document could and could not make a client do through your server.|'How would you let an AI assistant use our internal systems safely'.");
 T('ai-agents','Agents, memory and multi-step workflows','AI','ai',60,'high',4,'ai-security',8,
 "Planning loops, state and memory (short-term, summarised, retrieved), termination conditions, cost ceilings, human-in-the-loop checkpoints and when an agent is the wrong tool.|Knowing when a deterministic pipeline beats an agent is the mature, hireable opinion.|Implement one bounded agent in Palimpsest (a decision-audit run) with step limits, budget caps and a full trace stored per run.|Rebuild the same feature as a deterministic pipeline and compare cost, latency and reliability with real numbers.|'When would you not use an agent' — a question designed to detect hype-following.");
+T('ai-frameworks','AI frameworks in practice: Vercel AI SDK and LangGraph','AI','ai',45,'med',3,'ai-agents',7,
+"The Vercel AI SDK for streaming UI, tool calls and provider switching in Next.js; LangGraph for explicit, stateful agent graphs with checkpoints; and what each abstracts away from the raw SDK code you already wrote.|Job descriptions name these frameworks; having used them lightly — after building the primitives yourself — lets you discuss tradeoffs instead of just features.|In a scratch branch, rebuild the chat UI with the AI SDK's streaming hooks and a bounded agent as a small LangGraph graph with a human-approval node — do not merge unless it clearly simplifies the code.|Write a half-page comparison: raw SDK vs framework on control, debuggability, lock-in and speed of change.|'Would you use LangChain for this' — the good answer depends on the problem, and you can show why.");
+T('ai-ft-mm','Fine-tuning vs RAG, and multimodal inputs','AI','ai',45,'med',3,'rag-pipeline',7,
+"When fine-tuning helps (format, style, narrow classification, latency/cost with smaller models) vs when RAG helps (fresh or private knowledge); LoRA at a conceptual level; multimodal inputs such as PDFs with tables, screenshots and images, and their token costs.|Interviewers ask 'why not just fine-tune' to test judgement; multimodal document handling is a common real requirement.|Write a one-page decision matrix for Palimpsest, then add PDF-with-images ingestion using a vision-capable model for diagrams and tables, measuring cost per page.|Compare extraction quality on five real PDFs: text-only parser vs vision model.|'Fine-tuning or RAG for our company knowledge base' — RAG for knowledge, fine-tuning for behaviour.");
 T('ai-ops','Cost, latency and production monitoring for AI features','AI','ai',60,'high',4,'ai-agents',9,
 "Model routing by task, caching (exact and semantic), prompt compression, batching, streaming for perceived latency, token/cost dashboards and per-tenant quotas.|AI features fail on unit economics more often than on quality; this is the operational half of AI engineering.|Instrument every call with tokens, cost, latency and cache status, then cut cost per answer by 40% and document each lever.|Add semantic caching for repeated questions and measure hit rate and the risk of a stale answer.|'Your AI feature costs too much — what do you do' with five concrete levers.");
-T('p1-ai','Palimpsest — retrieval, decision graph and grounded answers','Projects','project',90,'critical',5,'rag-halluc,p1-jobs',10,
-"Ship the intelligence layer: hybrid retrieval over the decision corpus, tool-calling to traverse the decision graph, cited answers and contradiction detection on new pull requests.|This is the feature that makes the project memorable — it answers 'why is the code like this' with evidence.|Implement it with full traces, evals from your golden set and a UI that shows sources beside every claim.|Demo the contradiction check: open a PR that reverses a documented decision and have the system surface the original reasoning.|Have a two-minute demo and a ten-minute architecture walkthrough ready.");
-T('p2-ai','Hindsight FC — cohort retrieval and decision narratives','Projects','project',90,'high',5,'p2-algo,rag-retrieval',9,
-"Embed match states, retrieve comparable historical situations as a counterfactual cohort, compute the outcome delta, and generate a grounded narrative that must cite the underlying events.|Combining a numeric model with grounded generation is unusual and gives you a distinctive technical story.|Build the state vector, the cohort query with metadata filters, the delta computation and a narrative generator constrained to cited evidence.|Add an evaluation that rejects narratives containing claims not present in the retrieved events.|'How do you stop the model making things up about the match' — evidence binding.");
-T('p1-deploy','Palimpsest — deploy, harden and document','Projects','project',90,'high',4,'p1-ai,cicd',8,
-"Ship it publicly: Docker Compose or a managed host, Nginx, TLS, CI/CD with migrations, health checks, backups, seeded demo workspace and a README with diagrams.|A live URL plus a clear README converts a project from a claim into evidence.|Deploy, then run a cold-start test: a stranger should be able to try the demo in under two minutes.|Write the README sections interviewers actually read: problem, architecture, tradeoffs, failure modes, what you would do next.|Send the link before the interview — it changes the conversation.");
-T('p2-deploy','Hindsight FC — visualisation, caching and deploy','Projects','project',90,'med',4,'p2-ai',7,
-"Finish the product surface: pitch-grid visualisation, decision timeline, search, cached precomputed aggregates and a public deployment.|Visualisation makes the algorithm legible in a demo; caching makes it fast enough to demo at all.|Precompute per-match aggregates on ingest, cache hot reads in Redis, and render the threat surface and timeline in the UI.|Load-test the two heaviest endpoints and record p95 before and after caching.|A visual demo plus real numbers is a strong closing exhibit.");
+T('p1-ai','Palimpsest — decision extraction and cited Q&A (priority 1)','Projects','project',90,'critical',5,'llm-tools,p1-rag',10,
+"Ship the core feature: decision extraction as schema-constrained structured output (decision, rationale, alternatives rejected, author, date, source spans), a decision graph linking decisions to the documents and PRs that discuss them, and 'why is it like this?' answers that cite decisions and source spans and abstain when evidence is weak. Tool calling traverses the graph with authorisation-checked tools and a hard iteration cap.|This is the feature that makes the project memorable and the first thing to finish — everything after it is secondary.|Run extraction over the real corpus, spot-check 30 extracted decisions by hand and record extraction precision; build the UI that shows sources beside every claim.|Ask ten questions from your seed set live and confirm each answer links to the correct RFC or PR section.|Have a two-minute demo and a ten-minute architecture walkthrough ready.");
+T('p1-evals','Palimpsest — golden set, eval harness and CI gate (priority 2)','Projects','project',60,'critical',4,'p1-ai,rag-pipeline',10,
+"Grow the seed set into a 40-question golden set with expected decisions and source spans; score retrieval (recall@k, MRR), answer faithfulness and abstention accuracy; run it in promptfoo or a script in CI and fail the build on regression.|The numbers from this milestone are what go on the resume — without them the project is a claim.|Record a baseline, change one thing (chunking or reranking), and record the delta in a results table in the README.|Add a deliberately unanswerable question subset and report the abstention rate.|'How do you know it works' — show the table and the CI run.");
+T('p1-deploy','Palimpsest — production deploy, metrics and README (priority 3)','Projects','project',90,'high',4,'p1-evals,cicd',8,
+"Move to the production setup: Docker images, AWS (EC2 or ECS, RDS, S3) or a managed host, Nginx, TLS, CI/CD with migrations, health checks, backups, seeded demo workspace and a README with diagrams.|A live URL plus a clear README converts a project from a claim into evidence.|Deploy, then run a cold-start test: a stranger should be able to try the demo in under two minutes. Get 5 engineers outside your circle (post in the corpus project's community) to use it and record what they asked and what broke.|Write the README sections interviewers actually read: problem, differentiator, architecture, tradeoffs, failure modes, and a metrics table — documents ingested, decisions extracted, extraction precision, recall@k, faithfulness, abstention rate, p95 answer latency, cost per answer.|Send the link before the interview — it changes the conversation.");
+T('p1-contra','Palimpsest — contradiction check on pull requests (priority 4)','Projects','project',60,'high',5,'p1-deploy',9,
+"Scope it tightly: only explicit decisions (RFC or ADR documents with a clear decision section) are checked. For a new pull request, retrieve the decisions touching the same files or concepts, ask a structured-output judge whether the change reverses one, and post a comment only above a confidence threshold, always citing the original reasoning.|A noisy contradiction checker makes the headline feature look bad; a narrow, measured one is a standout demo.|Hand-label 20 real historical pull requests from the corpus (reverses a decision or not), then tune the threshold for precision over recall and report both numbers.|Demo it on one real historical PR that did reverse an RFC decision, and one that looks similar but did not.|'How did you handle false positives' — precision on a labelled set, and a threshold you chose deliberately.");
 T('sd-drills','System design drills for full-stack + AI roles','System Design','interview',90,'critical',5,'prod-debug,rag-pipeline',10,
 "Practise the format on five prompts: URL shortener, notification system, document processing pipeline, real-time collaborative editor, and a company-wide AI assistant.|Design is the highest-variance round; a repeatable structure removes most of that variance.|Fixed structure each time (requirements, scale estimates, API, data model, components, bottlenecks, failure modes, tradeoffs) with a 40-minute cap.|Record yourself on two prompts and grade the structure, not the content.|This is the round that decides between a junior and a mid-level offer.");
-T('iv-behav','Behavioural stories and project narrative','Interview','interview',60,'high',3,'p1-deploy',9,
+T('iv-behav','Behavioural stories and project narrative','Interview','interview',60,'high',3,'p1-rag',9,
 "Write eight STAR stories: hardest bug, performance win, disagreement, missed deadline, incident, refactor, learning something fast, and a decision you would reverse.|Strong technical candidates lose offers here by rambling; prepared stories with numbers close the gap.|Write each story in under 200 words with a concrete result, then rehearse aloud until each takes 90 seconds.|Map every story to a project artefact you can show on screen.|Every loop includes this round, and it is the cheapest one to win.");
+T('car-blog4','Write-up 4 — the project story','Career','career',60,'med',2,'car-blog3',7,
+"Publish the flagship post: 'Building Palimpsest — decision memory for engineering teams', covering architecture, the three hardest problems, evaluation results and what you would change.|This is the link you send with every application from now on; it does the project pitch for you.|Reuse diagrams from the README; lead with the problem, not the stack.|Add a two-minute demo video (screen recording) embedded in the post.|Hiring managers who read this arrive at the interview already interested.");
+T('car-apply5','Applications batch 5 and pipeline review','Career','career',45,'high',2,'car-apply4',7,
+"Next batch of applications, follow-ups on everything open, and a review of the tracker: which channel, tier and resume version produced screens.|From here the job search becomes the main project; the review tells you where to spend the next month.|Double down on the channel with the best response rate; rewrite whatever step has the worst conversion.|Plan the next four weeks of applications and mocks after the 84 days end.|Steady weekly applying through offers is normal — do not stop at the first screen.");
+T('mock5','Live mock interview 5 — full technical round','Interview','interview',60,'high',4,'mock4',9,
+"A final live mock covering the round you scored worst on in mocks 1-4, with a new interviewer if possible.|A fresh interviewer removes the familiarity effect and gives an honest read.|Treat it exactly like the real thing: camera, time limit, no notes.|Compare the score against mock 1 and write down what changed.|Readiness is when the weakest round is boring.");
+T('car-salary','Salary research and negotiation script','Career','career',45,'high',2,'car-apply3',8,
+"Research compensation bands for each target company and level (Levels.fyi, AmbitionBox, Glassdoor, peers), understand CTC components (fixed, variable, joining bonus, ESOPs/RSUs and vesting), and write a negotiation script.|Negotiation routinely moves offers by 10-25%; unprepared candidates accept the first number or state a low expectation on the first call.|Decide your walk-away, target and anchor numbers per tier, and write answers to 'what is your current CTC' and 'what are your expectations'.|Rehearse the counter-offer call aloud twice, including handling an exploding deadline.|Never give the first number if you can avoid it; always negotiate in writing after the verbal.");
 T('iv-final','Final mock loop — full 3-5 YOE simulation','Interview','interview',90,'critical',5,'sd-drills,iv-behav',10,
 "Run a complete loop in one sitting: JS/React deep dive, backend and SQL, system design with an AI component, project deep dive, behavioural.|The final rehearsal under realistic conditions is what makes the real thing feel routine.|Three hours, no notes, camera on, timed sections; score each round and write the three weakest areas.|Spend the remaining days only on those three weaknesses.|This is your readiness gate — repeat the weak rounds until they are boring.");
 T('rev-final','Final consolidation — one-page maps per domain','Interview','revision',60,'high',3,'iv-final',8,
-"Produce one page per domain (JS, React, Next, Node, SQL, infra, AI) with the ten questions you now answer confidently and the phrasing you use.|Interview performance is retrieval speed; your own compressed notes are the fastest retrieval path.|Write them from memory first, then fill gaps from your earlier consolidation notes.|Do a 20-minute rapid-fire self-quiz across all seven pages the morning before any interview.|This becomes your permanent pre-interview warm-up ritual.");
-T('git-pro','Git for teams: rebase, bisect and clean history','Git','coding',45,'med',2,'',6,
-"Interactive rebase, merge vs rebase, conflict resolution, cherry-pick, reflog recovery, bisect, and commit/PR hygiene.|Your commit history is visible in every portfolio repo, and 'how would you find which commit broke this' is a common practical question.|Rewrite a messy branch into clean logical commits with interactive rebase, then recover a deleted branch with reflog.|Use git bisect to find a deliberately introduced bug across 20 commits.|'How do you resolve a conflict' and 'merge or rebase' — have a reasoned team-context answer.");
+"Produce one page per domain (JS, React, Next, Node, SQL, infra, AWS, testing, AI) with the ten questions you now answer confidently and the phrasing you use.|Interview performance is retrieval speed; your own compressed notes are the fastest retrieval path.|Write them from memory first, then fill gaps from your earlier consolidation notes.|Do a 20-minute rapid-fire self-quiz across all pages the morning before any interview.|This becomes your permanent pre-interview warm-up ritual.");
+T('p2-ai','Hindsight FC — cohort retrieval, grounded narratives and a published season audit','Projects','project',90,'high',5,'p2-deploy,rag-retrieval',9,
+"Embed match states, retrieve comparable historical situations as a counterfactual cohort, compute the outcome delta with a confidence band, and generate a narrative that may only cite retrieved event ids. Then publish one real analysis: every managerial decision across a full Premier League or La Liga season in the open data, ranked by estimated value added.|The AI layer turns the project from a data-engineering demo into a grounded-generation system, and a published season audit gives it an audience outside interviews.|Build the state vector, the cohort query with metadata filters and a minimum cohort size, the delta computation and the narrative generator constrained to cited evidence.|Add an evaluation that rejects narratives containing claims not present in the retrieved events, and require every narrative to state cohort size and the confidence band so it never reads as a causal verdict.|'How do you stop the model making things up about the match' — evidence binding plus an automatic rejection pass.");
+
+/* ============ PHASE 4 — PORTFOLIO SPRINT (weeks 13-16) ============ */
+T('p5-arch','Chitthi — problem, users, scope and safety line','Projects','project',60,'high',3,'p1-contra',9,
+"Frame Project 5: people receive official letters — bank notices, tax and GST letters, electricity and water bills, insurance and government scheme notices — in English or formal Hindi they cannot fully read. Chitthi turns a photo of the letter into a plain-language explanation in their language, with every amount, deadline and required action highlighted on the original page. Recruit 5 real test users now (parents, relatives, neighbours).|A problem your own family has, solved with multimodal AI, is a far more convincing story than another dashboard — and real users are what make a project a 10.|Write the brief: personas, supported document types, languages (Hindi and English first, one regional language if a native speaker can review it), the safety line (explains what the letter says, never gives legal or financial advice, always says when to ask a person), privacy stance, and a scan of what exists (Lens translate, generic chatbots) versus the differentiator: structured extraction with on-page citations, reminders and family sharing.|Collect 30 real letters from your test users, redact personal details, and label the expected fields — this is the evaluation set.|'Who used it and what changed for them' — the strongest possible project answer.");
+T('p5-extract','Chitthi — upload, vision extraction and on-page citations','Projects','project',60,'critical',4,'p5-arch,aws-core,ai-ft-mm',10,
+"Presigned S3 upload from phone camera, image cleanup, a vision-capable model plus OCR fallback, and schema-constrained extraction of sender, document type, amounts, deadlines, reference numbers and required actions — each field carrying a bounding box on the page and a confidence score. Runs as a queued, idempotent job with progress over WebSockets.|On-page citations are what make the output trustworthy for someone who cannot read the original; field confidence is what lets the system know when to abstain.|Implement it end to end, then score field-level precision and recall on the 30-letter set and publish the table.|Photograph the same letter badly (tilt, glare, low light) and make extraction degrade gracefully instead of hallucinating fields.|'How did you evaluate a multimodal pipeline' — field-level metrics on real documents.");
+T('p5-explain','Chitthi — grounded explanation in the reader\'s language','Projects','project',60,'critical',4,'p5-extract,rag-halluc',10,
+"Generate a short explanation at a simple reading level in Hindi or English: what this letter is, what it wants, by when, how much, and what happens if ignored — every sentence linked to a highlighted region. Low-confidence fields trigger a plain 'please confirm this with a person' instead of a guess.|Grounded generation for a non-technical, high-stakes audience is exactly the AI-safety maturity interviewers look for.|Evaluate faithfulness automatically and have native speakers rate clarity and correctness on 20 letters; track abstention on deliberately unreadable inputs.|Run a prompt-injection test: a letter image containing written instructions to the model must not change the output format or claims.|'How do you make AI output safe for vulnerable users' — grounding, abstention, human review of language quality.");
+T('p5-remind','Chitthi — deadlines, reminders and family sharing','Projects','project',60,'high',3,'p5-explain,jobs-queue',8,
+"Turn extracted deadlines into scheduled reminders (email plus an .ics calendar file, and SMS or WhatsApp via a provider sandbox if available) and let the user share an explanation with a family member through an expiring, read-only link.|Reminders turn a one-off explanation into a feature people come back for; sharing solves the real pattern of parents forwarding letters to their children.|Implement reminders as idempotent delayed jobs that survive restarts, and signed expiring share links with a revoke button.|Reschedule a reminder when the user corrects a deadline, and prove no duplicate reminders are sent.|Scheduling and idempotency are solid backend talking points on a consumer product.");
+T('p5-ship','Chitthi — privacy hardening, user test and launch','Projects','project',60,'high',4,'p5-remind,sec-owasp',9,
+"Privacy by design: redact account numbers before model calls where possible, encrypt files at rest, auto-delete after 30 days, no data used for training, and a clear privacy page. Then deploy, run a moderated test with your 5 users, and publish the write-up.|Personal documents are the most sensitive data you will handle in any project; a written threat model plus a real user test is what makes this a standout.|Measure task success and time-to-understand for each user on three letters, with and without Chitthi, and put the results in the README.|Write the threat model (PII leakage, injection via document text, share-link abuse) and the mitigations you shipped.|Real users, real measurements, real privacy decisions — the full 10/10 package.");
+
+T('p4-arch','Post-Plant — problem, compliance and data plan','Projects','project',60,'high',3,'p5-ship,car-riotkey',8,
+"Frame Project 4: ranked Valorant players grind games without knowing why they lose rounds; trackers show totals, not habits. Post-Plant analyses your own post-match data round by round, finds the three habits costing you the most rounds, and turns them into a weekly practice plan — and it doubles as the reward loop of this plan. Recruit 5 friends who play ranked as users.|A tool you and your friends actually use every week produces real usage data and a genuine story, which beats any hypothetical user.|Write the brief with the compliance section first: post-match only, nothing that gives an in-match advantage, only data the key and policies allow, no exposure of other players. Record key status and the fixture-data fallback.|Define the habit metrics before writing code: first-death rate by site and side, trade rate, force-buy win rate, utility per round, post-plant positioning.|'Tell me about working within a third-party API's rules' — rate limits, policies and approvals.");
+T('p4-ingest','Post-Plant — rate-limited Riot API client and match ingestion','Projects','project',60,'high',4,'p4-arch,api-hardening,jobs-queue',9,
+"A typed API client that respects both application and method rate limits with a Redis token bucket, honours 429 Retry-After, and fetches match history and match details through a queue with idempotent upserts. Schema covers matches, rounds, economy, kills with coordinates and player positions at kill time.|Working correctly under someone else's rate limits is a very common real backend constraint and a clean interview topic.|Backfill your last 100 matches, then add incremental sync that only fetches new matches, and cache immutable match payloads forever.|Simulate a burst that would exceed the limit and prove the client slows down instead of getting blocked.|'How do you consume a heavily rate-limited API at scale' — token buckets, queues and caching of immutable data.");
+T('p4-analytics','Post-Plant — round-level habit analytics','Projects','project',60,'high',4,'p4-ingest,sql-sub',9,
+"SQL-first analytics with window functions: first-death rate by map, site and side; trade rate (a teammate avenges you within three seconds); economy decisions and force-buy win rates; utility used per round; kill and death heatmaps from coordinates per map. Every metric carries a sample size and confidence interval and is hidden below a minimum sample.|Honest statistics on small personal samples is the difference between a gimmick and a tool; it is also strong SQL practice on a dataset you care about.|Write each metric as a tested SQL view, compare your numbers across maps and agents, and rank habits by estimated rounds lost per 100 rounds.|Validate one metric by hand against a match you remember clearly.|'How do you avoid drawing conclusions from noisy data' — sample thresholds and intervals.");
+T('p4-coach','Post-Plant — grounded AI coach and weekly plan','Projects','project',60,'high',4,'p4-analytics,llm-tools',9,
+"An LLM coach that answers questions like 'why do I lose Ascent attack?' by calling read-only tools over your analytics views, then produces a structured weekly plan (three habits, specific Range and deathmatch drills, a target metric for each) where every claim cites a metric and sample size.|Tool-calling over your own SQL with evidence-bound answers is the same pattern as Palimpsest in a completely different domain — proof the skill transfers.|Evaluate it: for 30 generated claims, check the cited number matches the underlying query result exactly; abstain when samples are too small.|Add a guard that refuses to speculate about other players and keeps the coach to post-match self-improvement.|'How did you keep the model honest' — every sentence traced to a query.");
+T('p4-ship','Post-Plant — dashboard, realtime updates and a 4-week self-experiment','Projects','project',60,'high',3,'p4-coach',8,
+"Next.js dashboard with map heatmaps on canvas, habit trends, the weekly plan, and a live 'new match processed' notification over WebSockets. Deploy it, onboard your 5 friends, then run a 4-week experiment on yourselves: follow the plan and track the target metrics.|A before-and-after result from real users is the proof that makes this project a 10 — and a genuinely fun write-up.|Record first-death rate, trade rate and rank trajectory before and after, with the honest caveat that four weeks is a small sample.|Publish the write-up with charts and link it from the README.|'Did it actually help anyone' — you will have numbers.");
+
+T('p3-arch','Doppelgänger — player similarity scouting for PL and La Liga','Projects','project',60,'high',3,'p4-ship,p2-deploy',8,
+"Frame Project 3: finding a replacement or a cheaper alternative for a player takes a scouting department most clubs, analysts and fantasy managers do not have. Doppelgänger finds players who play like a given player — based on where and how they act on the pitch, not just totals — across Premier League and La Liga seasons in the open data, filtered by age, minutes and market value.|Player-level football data plus vector similarity plus text-to-SQL is a distinctive combination that exercises most of the plan in one project.|Write the brief: which PL and La Liga seasons the open event data covers, which public market-value dataset you use, and the licence and attribution terms of each — verify them before building. Reuse the Hindsight ingestion rather than rebuilding it.|Define the evaluation first: a player's season N profile should retrieve his own season N+1 profile in the top 5, and a hand-made list of widely accepted stylistic comparisons should score well.|'How did you know the similarity was any good' — a self-retrieval test is a clever, defensible answer.");
+T('p3-data','Doppelgänger — per-90 profiles, roles and age curves','Projects','project',60,'high',4,'p3-arch,sql-sub',8,
+"From the ingested events, build per-player per-season profiles: per-90 rates with minutes thresholds, action location grids (where passes, carries, shots and defensive actions happen), inferred positions and roles, and league-adjusted features. Materialised views keep reads fast.|Feature engineering on real sports data is where the interesting modelling decisions live — minutes thresholds, normalisation and league adjustment all need defending.|Write the feature pipeline as tested SQL plus a small Python step if needed, and document every normalisation choice.|Plot age curves for two positions and sanity-check them against common knowledge.|'Why did you normalise that way' — have the reasoning written down.");
+T('p3-sim','Doppelgänger — style vectors, pgvector search and archetypes','Projects','project',60,'critical',4,'p3-data,vecdb',9,
+"Combine normalised per-90 rates and location grids into style vectors, search them with pgvector plus metadata filters (league, age, minutes, value), cluster them into interpretable role archetypes, and explain every match by the features that drove the similarity.|Explainable similarity is the whole product; a list of names without reasons is useless to a scout.|Run the self-retrieval evaluation and report top-1 and top-5 accuracy; tune feature weights and record the change.|Show a case where similarity is misleading (a player in a very different system) and how the explanation reveals it.|'Walk me through your similarity metric' with numbers and a failure case.");
+T('p3-ask','Doppelgänger — natural-language scouting with safe text-to-SQL','Projects','project',60,'critical',5,'p3-sim,llm-tools,ai-security',10,
+"Answer queries like 'left-footed centre-backs under 23 in La Liga who progress the ball like this player' with a tool-calling agent that produces a validated structured query plan over allowlisted views, runs it as a read-only database role with row limits and timeouts, and writes a short scouting report where every number is cited.|Safe text-to-SQL is one of the most requested applied-AI patterns, and doing it with guardrails is a strong security answer.|Build a 40-query golden set with expected result sets and score exact-match accuracy; log every generated plan.|Attempt SQL injection and schema probing through the chat box and prove the guardrails hold.|'How would you let users query a database in natural language safely'.");
+T('p3-ship','Doppelgänger — comparison UI, caching, deploy and a published scouting piece','Projects','project',60,'high',3,'p3-ask',8,
+"Player comparison view with pitch maps and radar charts, cached hot queries, deployment, and one published analysis — for example, stylistic replacements for a player from the covered seasons — with the attribution the data licences require.|A published piece gives the project an audience and gives you a link that does the pitch for you.|Load-test the similarity endpoint and record p95 with and without caching; add both to the README metrics table.|Share it in football analytics communities and record the feedback.|Football recruiters and non-football interviewers alike respond to a clean, visual, well-explained demo.");
+
+/* ============================================================
+   PROJECT SESSIONS — each milestone becomes N one-hour sessions
+   in the separate project lane. The final session keeps the
+   milestone id, so prerequisites wait for the whole milestone.
+   ============================================================ */
+const SESS = {
+  'p1-arch':3,'p1-corpus':3,'p1-schema':4,'p1-ui':6,'p1-backend':7,'p1-tests':3,'p1-auth':7,'p1-ship-early':2,
+  'p1-jobs':7,'p1-rag':7,'p1-ai':6,'p1-evals':3,'p1-deploy':3,'p1-contra':3,
+  'p2-arch':2,'p2-ingest':5,'p2-algo':7,'p2-deploy':3,'p2-ai':8,
+  'p5-arch':2,'p5-extract':7,'p5-explain':6,'p5-remind':4,'p5-ship':5,
+  'p4-arch':2,'p4-ingest':5,'p4-analytics':6,'p4-coach':5,'p4-ship':4,
+  'p3-arch':2,'p3-data':5,'p3-sim':6,'p3-ask':6,'p3-ship':4
+};
+const STRETCH = {};
+const POST = {'p2-ai':1,'p3-':1,'p4-':1,'p5-':1};   // milestones scheduled in the portfolio sprint
+function isPost(id){ return !!(POST[id] || POST[id.slice(0,3)]) }
+(function expandSessions(){
+  const out=[];
+  C.forEach(t=>{
+    if(t.kind!=='project'){ out.push(t); return }
+    const n=SESS[t.id]||1;
+    for(let k=1;k<=n;k++){
+      const id = k===n ? t.id : t.id+'::s'+k;
+      const pre = k===1 ? t.prereq.slice() : [t.id+'::s'+(k-1)];
+      out.push(Object.assign({}, t, {
+        id, mid:t.id, sess:k, of:n, stretch:!!STRETCH[t.id], post:isPost(t.id),
+        title: t.title+(n>1?' ('+k+'/'+n+')':''),
+        min: SESSION_MIN, prereq: pre,
+        how: (n>1?'Session '+k+' of '+n+' ('+n+'h milestone). ':'')+t.how
+      }));
+    }
+  });
+  C.length=0; out.forEach(t=>C.push(t));
+})();
 
 /* ============================================================
    STATE + STORAGE
@@ -573,12 +759,12 @@ const Store={
 function iso(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0') }
 function parseISO(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d) }
 function addDays(d,n){ const x=new Date(d.getTime()); x.setDate(x.getDate()+n); return x }
-function blankState(){ return {v:1, start:iso(new Date()), updatedAt:0, tasks:{}, hol:[], dayNote:{}, cfg:{}}; }
+function blankState(){ return {v:2, start:iso(new Date()), updatedAt:0, tasks:{}, hol:[], dayNote:{}, cfg:{}}; }
 let state = Store.read() || blankState();
 if(!state.tasks) state.tasks={}; if(!state.hol) state.hol=[]; if(!state.dayNote) state.dayNote={};
 const START = parseISO(state.start);
 let _sv=null;
-function save(){ clearTimeout(_sv); _sv=setTimeout(()=>Store.write(state),140); }
+function save(){ clearTimeout(_sv); _sv=setTimeout(()=>Store.write(state),140) }
 function saveNow(){ clearTimeout(_sv); Store.write(state) }
 window.addEventListener('beforeunload',saveNow);
 function dateFor(i){ return addDays(START,i) }
@@ -590,7 +776,7 @@ function stRead(id){ return state.tasks[id] || {s:'planned'} }
 /* ============================================================
    REVISION TASK SYNTHESIS
    ============================================================ */
-const REVISABLE = C.filter(t=>t.iw>=9 && !['interview','revision','project'].includes(t.kind));
+const REVISABLE = C.filter(t=>t.iw>=9 && !['interview','revision','project','career'].includes(t.kind));
 function revTask(anchor,k){
   return {id:anchor.id+'::r'+k, title:REV_LABEL[k]+' — '+anchor.title, cat:anchor.cat, kind:'revision',
     min:REV_MIN[k], pri:k<2?'med':'high', diff:anchor.diff, iw:anchor.iw, prereq:[anchor.id], anchorId:anchor.id, gap:REV_OFFSETS[k],
@@ -606,36 +792,54 @@ function revTask(anchor,k){
 const TASKMAP = {}; C.forEach(t=>TASKMAP[t.id]=t);
 
 /* ============================================================
-   SCHEDULER
+   SCHEDULER — two lanes per day
+   study lane: curriculum, revision, interview drills, career
+   project lane: one-hour project sessions (separate time budget)
+   Sunday = buffer: no new material in the study lane
    ============================================================ */
-function capFor(i,s){ if(s.hol.indexOf(i)>-1) return 0; return CAP[dateFor(i).getDay()] }
+function laneOf(t){ return t.kind==='project'?'proj':'study' }
+function isBuffer(i){ return dateFor(i).getDay()===BUFFER_DOW }
+function makeDay(i,s){
+  const hol=s.hol.indexOf(i)>-1, dw=dateFor(i).getDay();
+  return {i, hol, buf:!hol&&dw===BUFFER_DOW, cap:hol?0:CAP[dw], pcap:hol?0:(i>=PLAN_DAYS?PCAP_POST[dw]:PCAP[dw]), used:0, pused:0, items:[]};
+}
+function fits(day,t,s,extra){
+  const lane=laneOf(t);
+  const cap=lane==='proj'?day.pcap:day.cap; if(cap===0) return false;
+  if(lane==='study' && day.buf){
+    const bk=(s.tasks[t.id]||{}).s==='backlog';
+    if(!(t.kind==='revision'||t.kind==='career'||bk)) return false;
+  }
+  const used=lane==='proj'?day.pused:day.used;
+  return used+t.min<=cap+(extra||0);
+}
+function put(day,t){ day.items.push(t); if(laneOf(t)==='proj') day.pused+=t.min; else day.used+=t.min; }
 
 function buildSchedule(s, today){
-  const days=[]; for(let i=0;i<HORIZON;i++) days.push({i, cap:capFor(i,s), used:0, items:[], hol:s.hol.indexOf(i)>-1});
+  const days=[]; for(let i=0;i<HORIZON;i++) days.push(makeDay(i,s));
   const placed={}; const all=[];
+  const pin=t=>{ const d=Math.max(0,Math.min(HORIZON-1,s.tasks[t.id].p)); put(days[d],t); placed[t.id]=d; all.push(t) };
 
   // pass 1: pinned work (completed / in-progress stays where it happened)
   C.forEach(t=>{
     const ts=s.tasks[t.id];
-    if(ts && ts.p!=null && (ts.s==='completed'||ts.s==='inprogress')){
-      const d=Math.max(0,Math.min(HORIZON-1,ts.p));
-      days[d].items.push(t); days[d].used+=t.min; placed[t.id]=d; all.push(t);
-    }
+    if(ts && ts.p!=null && (ts.s==='completed'||ts.s==='inprogress')) pin(t);
   });
 
-  // pass 2: sequential packing of remaining curriculum
-  let flow = 0;
+  // pass 2: sequential packing per lane, prerequisites respected across lanes
+  const flow={study:0,proj:0};
   C.forEach(t=>{
     if(placed[t.id]!=null) return;
-    const ts=s.tasks[t.id]||{};
-    let start = flow;
+    const ts=s.tasks[t.id]||{}, lane=laneOf(t);
+    let start = flow[lane];
     if(today!=null) start=Math.max(start, today);
     if(ts.s==='backlog' && ts.bk!=null) start=Math.max(start, ts.bk+1);
-    t.prereq.forEach(p=>{ if(placed[p]!=null) start=Math.max(start, placed[p]); });
+    if(t.post) start=Math.max(start, PLAN_DAYS);
+    t.prereq.forEach(p=>{ if(placed[p]!=null) start=Math.max(start, placed[p] + (laneOf(TASKMAP[p]||t)===lane?0:1)); });
     let d=start;
-    while(d<HORIZON-1 && (days[d].cap===0 || days[d].used + t.min > days[d].cap)) d++;
-    days[d].items.push(t); days[d].used+=t.min; placed[t.id]=d; all.push(t);
-    flow=d;
+    while(d<HORIZON-1 && !fits(days[d],t,s)) d++;
+    put(days[d],t); placed[t.id]=d; all.push(t);
+    flow[lane]=d;
   });
 
   // pass 3: spaced revision, anchored to where the source topic actually landed
@@ -644,14 +848,12 @@ function buildSchedule(s, today){
       const base=placed[a.id]; if(base==null) return;
       let target=base+off; if(target>=PLAN_DAYS) return;      // do not schedule revision past the plan
       const r=revTask(a,k); const ts=s.tasks[r.id];
-      if(ts && ts.p!=null && (ts.s==='completed'||ts.s==='inprogress')){
-        const d=Math.max(0,Math.min(HORIZON-1,ts.p)); days[d].items.push(r); days[d].used+=r.min; placed[r.id]=d; all.push(r); return;
-      }
+      if(ts && ts.p!=null && (ts.s==='completed'||ts.s==='inprogress')){ pin(r); return }
       if(today!=null) target=Math.max(target,today);
       if(ts && ts.s==='backlog' && ts.bk!=null) target=Math.max(target,ts.bk+1);
       let d=target, guard=0;
-      while(d<HORIZON-1 && guard++<HORIZON && (days[d].cap===0 || days[d].used + r.min > days[d].cap+15)) d++;
-      days[d].items.push(r); days[d].used+=r.min; placed[r.id]=d; all.push(r);
+      while(d<HORIZON-1 && guard++<HORIZON && !fits(days[d],r,s,15)) d++;
+      put(days[d],r); placed[r.id]=d; all.push(r);
     });
   });
 
@@ -665,7 +867,9 @@ function rank(t){
   let r=PRI[t.pri]!=null?PRI[t.pri]:2;
   if(s.s==='backlog') r-=1.5;                 // carried-over work goes first
   if(t.kind==='revision') r+=0.4;             // revision after the day's new material
-  if(t.kind==='interview') r+=0.6;            // interview drill closes the session
+  if(t.kind==='interview') r+=0.6;            // interview drill closes the study session
+  if(t.kind==='career') r+=0.8;               // career admin after study
+  if(t.kind==='project') r+=20;               // project lane listed separately, last
   if(s.s==='completed') r+=10;
   return r;
 }
@@ -681,28 +885,29 @@ function reschedule(){ SCH = buildSchedule(state, TCLAMP); _M=null; save(); rend
 let _M=null;
 function metrics(){ if(!_M) _M={sc:scores(), c:counts(), sk:streak()}; return _M }
 function weightOf(t){ return t.min*(1+t.iw/10) }
+function inScope(t){ return !t.stretch }
 function scores(){
   const acc={}; const add=(c,w,done,weak)=>{ acc[c]=acc[c]||{t:0,d:0,w:0}; acc[c].t+=w; if(done)acc[c].d+=w; acc[c].w+=weak?1:0 };
-  SCH.all.forEach(t=>{
+  SCH.all.filter(inScope).forEach(t=>{
     const s=stRead(t.id); const w=weightOf(t);
     let cats=[t.cat];
     if(t.cat==='RAG'||t.cat==='LLMs') cats.push('AI');
     if(t.cat==='Prisma'||t.cat==='PostgreSQL') cats.push('SQL');
-    if(t.cat==='Docker') cats.push('DevOps');
+    if(t.cat==='Docker'||t.cat==='AWS') cats.push('DevOps');
     if(t.cat==='System Design') cats.push('Interview');
     cats.forEach(c=>add(c,w,s.s==='completed',s.weak));
   });
   const out={};
   CATS.forEach(c=>{ const a=acc[c]; if(!a){out[c]=null;return}
     out[c]=Math.max(0,Math.min(100,Math.round(100*a.d/a.t) - 4*a.w)); });
-  let T=0,D=0,W=0; SCH.all.forEach(t=>{const s=stRead(t.id);const w=weightOf(t);T+=w;if(s.s==='completed')D+=w;if(s.weak)W++});
+  let T=0,D=0,W=0; SCH.all.filter(inScope).forEach(t=>{const s=stRead(t.id);const w=weightOf(t);T+=w;if(s.s==='completed')D+=w;if(s.weak)W++});
   out.__overall=Math.max(0,Math.min(100,Math.round(100*D/T)-Math.round(W*0.7)));
   return out;
 }
 function counts(){
-  let done=0,total=0,back=0,mins=0,over=0;
-  SCH.all.forEach(t=>{ const s=stRead(t.id); total++; if(s.s==='completed'){done++;mins+=t.min} if(s.s==='backlog')back++; if(SCH.placed[t.id]>=PLAN_DAYS)over++; });
-  return {done,total,back,mins,over};
+  let done=0,total=0,back=0,mins=0,pmins=0,over=0;
+  SCH.all.filter(inScope).forEach(t=>{ const s=stRead(t.id); total++; if(s.s==='completed'){done++; if(t.kind==='project')pmins+=t.min; else mins+=t.min} if(s.s==='backlog')back++; if(SCH.placed[t.id]>=(t.post?PHASE4_END+1:PLAN_DAYS))over++; });
+  return {done,total,back,mins,pmins,over};
 }
 function streak(){
   let n=0;
@@ -716,11 +921,14 @@ function streak(){
   }
   return n;
 }
-function phaseOf(i){ return PHASES.find(p=>i>=p.from&&i<=p.to) || PHASES[2] }
+function phaseOf(i){ return PHASES.find(p=>i>=p.from&&i<=p.to) || PHASES[PHASES.length-1] }
 function projStats(p){
-  const list=C.filter(t=>t.id.indexOf(p)===0);
+  const sessions=C.filter(t=>t.id.indexOf(p)===0);
+  const core=sessions.filter(t=>!t.stretch);
+  const list=sessions.filter(t=>t.id.indexOf('::')<0);          // one entry per milestone (final session)
   const done=list.filter(t=>stRead(t.id).s==='completed').length;
-  return {done,total:list.length,pct:Math.round(100*done/list.length),list};
+  const sDone=core.filter(t=>stRead(t.id).s==='completed').length;
+  return {done,total:list.length,pct:core.length?Math.round(100*sDone/core.length):0,list,sDone,sTotal:core.length,hours:core.length*SESSION_MIN/60};
 }
 
 /* ============================================================
@@ -736,21 +944,28 @@ function colorOf(t){ return 'var('+(CATCOLOR[t.kind==='revision'?'Revision':t.ca
 function fmt(d){ return DOW[(d.getDay()+6)%7]+', '+d.getDate()+' '+MON[d.getMonth()].slice(0,3) }
 function hhmm(m){ return m>=60? (m/60).toFixed(m%60?1:0)+'h' : m+'m' }
 function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'),2200) }
+function dayLine(sd){
+  if(sd.hol) return 'Holiday';
+  return 'Study '+hhmm(sd.used)+' / '+hhmm(sd.cap)+' · Project '+hhmm(sd.pused)+' / '+hhmm(sd.pcap)+(sd.buf?' · buffer day':'');
+}
 
 function renderStats(){
-  const m=metrics(), c=m.c, sc=m.sc, sk=m.sk, ph=phaseOf(Math.min(TODAY,PLAN_DAYS-1)), wk=Math.floor(TODAY/7)+1;
+  const m=metrics(), c=m.c, sc=m.sc, sk=m.sk, ph=phaseOf(Math.max(0,Math.min(TODAY,PHASE4_END))), wk=Math.floor(TODAY/7)+1;
   const left=Math.max(0,PLAN_DAYS-TODAY);
   $('#cdNum').textContent = TODAY<0? PLAN_DAYS : left;
-  $('#cdLab').textContent = TODAY>=PLAN_DAYS? 'sprint complete — keep shipping, refining, and building signal' : 'days left of 84 · week '+Math.min(12,Math.max(1,wk))+' of 12';
-  $('#phaseLine').textContent = 'Phase '+ph.n+' · '+ph.name+' · build with clarity, taste, and a stronger point of view';
-  const p1=projStats('p1-'), p2=projStats('p2-');
+  $('#cdLab').textContent = TODAY>PHASE4_END? 'plan complete — keep applying and drilling interviews' : TODAY>=PLAN_DAYS? 'curriculum done · portfolio sprint week '+(wk-12)+' of 4' : 'days left of 84 · week '+Math.min(12,Math.max(1,wk))+' of 12';
+  $('#phaseLine').textContent = 'Phase '+ph.n+' · '+ph.name;
+  const PS=PROJECTS.map(p=>projStats(p.key)), p1=PS[0], p2=PS[1];
+  const allH=PS.reduce((a,s)=>a+s.hours,0), avg=Math.round(PS.reduce((a,s)=>a+s.pct,0)/PS.length);
+  const elapsed=Math.max(1,Math.min(TODAY+1,PLAN_DAYS));
   const box=[
     ['Completion', Math.round(100*c.done/c.total)+'%', c.done+' of '+c.total+' tasks', Math.round(100*c.done/c.total)],
     ['Overall skill score', sc.__overall, 'weighted by interview value', sc.__overall],
-    ['Study logged', (c.mins/60).toFixed(1)+'h', 'target ~2h per day', Math.min(100,Math.round(100*c.mins/(Math.max(1,TODAY+1)*120)))],
+    ['Study logged', (c.mins/60).toFixed(1)+'h', 'target ~2h per day', Math.min(100,Math.round(100*c.mins/(elapsed*120)))],
+    ['Project hours', (c.pmins/60).toFixed(0)+'h', 'of '+Math.round(allH)+'h across 5 projects', Math.round(100*c.pmins/60/Math.max(1,allH))],
     ['Streak', sk+'d', 'days finished or on holiday', Math.min(100,sk*8)],
     ['Backlog', c.back, c.back? 'carried forward, nothing lost':'nothing carried over', c.back?Math.min(100,c.back*12):0],
-    ['Projects', Math.round((p1.pct+p2.pct)/2)+'%', 'Palimpsest '+p1.done+'/'+p1.total+' · Hindsight '+p2.done+'/'+p2.total, (p1.pct+p2.pct)/2]
+    ['Projects', avg+'%', PROJECTS.map((p,n)=>p.short+' '+PS[n].done+'/'+PS[n].total).join(' · '), avg]
   ];
   $('#stats').innerHTML = box.map(b=>'<div class="stat"><div class="k">'+b[0]+'</div><div class="v">'+b[1]+'</div><div class="sub">'+b[2]+'</div><div class="bar"><i style="width:'+Math.max(0,Math.min(100,b[3]))+'%"></i></div></div>').join('');
   if(c.over>0) $('#calLoad').textContent = c.over+' task'+(c.over>1?'s':'')+' pushed past day 84';
@@ -759,10 +974,11 @@ function renderStats(){
 
 function dayCell(d, inMonth){
   const i=dayIndexOf(d), sd=(i>=0&&i<HORIZON)?SCH.days[i]:null;
-  const cell=el('button','cell'+(inMonth?'':' out')+(i===TODAY?' today':'')+(sd&&sd.hol?' hol':'')+(selected===i?' sel':''));
+  const cell=el('button','cell'+(inMonth?'':' out')+(i===TODAY?' today':'')+(sd&&sd.hol?' hol':'')+(sd&&sd.buf?' buf':'')+(selected===i?' sel':''));
   const items=sd?sd.items:[];
   const done=items.filter(t=>stRead(t.id).s==='completed').length;
-  const head=el('div','d','<b>'+d.getDate()+'</b>'+(sd&&sd.hol?'<span class="pill">Holiday</span>':(items.length?'<span class="pill">'+done+'/'+items.length+'</span>':'')));
+  const pill=sd&&sd.hol?'Holiday':(items.length?done+'/'+items.length+(sd.buf?' · buffer':''):(sd&&sd.buf?'buffer':''));
+  const head=el('div','d','<b>'+d.getDate()+'</b>'+(pill?'<span class="pill">'+pill+'</span>':''));
   cell.appendChild(head);
   items.slice(0,3).forEach(t=>{
     const s=stRead(t.id);
@@ -808,7 +1024,7 @@ function renderCalendar(){
       const box=el('div','wday'+(i===TODAY?' today':'')+(sd&&sd.hol?' hol':''));
       const items=sd?sd.items:[];
       const h=el('div','');
-      h.innerHTML='<header><b>'+fmt(d)+'</b><span>'+(sd&&sd.hol?'Holiday':items.length?hhmm(sd.used)+' planned · cap '+hhmm(sd.cap):'No plan')+'</span></header>';
+      h.innerHTML='<header><b>'+fmt(d)+'</b><span>'+(sd?(items.length||sd.hol?dayLine(sd):'No plan'):'No plan')+'</span></header>';
       box.appendChild(h.firstChild);
       const list=el('div','tasks');
       items.forEach(t=>list.appendChild(taskRow(t,i)));
@@ -822,7 +1038,7 @@ function renderCalendar(){
     }
     area.appendChild(wrap);
   }
-  $('#legend').innerHTML = [['Frontend','--react'],['Backend','--node'],['Data','--sql'],['Infra','--prod'],['AI','--ai'],['Project','--proj'],['Interview','--iv'],['Revision','--rev']]
+  $('#legend').innerHTML = [['Frontend','--react'],['Backend','--node'],['Data','--sql'],['Infra','--prod'],['AWS','--cloud'],['Testing','--test'],['Security','--sec'],['Python','--py'],['AI','--ai'],['Project','--proj'],['Interview','--iv'],['Career','--car'],['Revision','--rev']]
     .map(l=>'<span><i style="background:var('+l[1]+')"></i>'+l[0]+'</span>').join('');
 }
 
@@ -835,10 +1051,13 @@ function taskRow(t,dayIdx){
   cb.onclick=e=>{e.stopPropagation(); toggleDone(t.id,dayIdx)};
   const mid=el('div',''); mid.style.flex='1';
   mid.appendChild(el('div','tt',esc(t.title)));
-  const meta=['<b>'+hhmm(t.min)+'</b>', t.cat, KINDLABEL[t.kind], 'difficulty '+t.diff+'/5'];
-  if(t.iw>=9) meta.push('high interview value');
+  const meta=['<b>'+hhmm(t.min)+'</b>', t.cat, KINDLABEL[t.kind]];
+  if(t.kind!=='career') meta.push('difficulty '+t.diff+'/5');
+  if(t.iw>=9 && t.kind!=='project') meta.push('high interview value');
   mid.appendChild(el('div','meta',meta.join(' <span style="opacity:.4">·</span> ')));
   const tags=el('div','tags');
+  if(t.kind==='project') tags.appendChild(el('span','tag lane','Project lane'));
+  if(t.stretch) tags.appendChild(el('span','tag stretch','Stretch'));
   if(s.s==='backlog') tags.appendChild(el('span','tag bk','Backlog'));
   if(s.s==='inprogress') tags.appendChild(el('span','tag','In progress'));
   if(s.weak) tags.appendChild(el('span','tag crit','Shaky'));
@@ -854,9 +1073,9 @@ function openDay(i, focusId){
   if(i<0||i>=HORIZON) return;
   selected=i; const sd=SCH.days[i], d=dateFor(i);
   $('#dTitle').textContent = fmt(d)+' '+d.getFullYear();
-  const wk=Math.floor(i/7)+1, ph=phaseOf(Math.min(i,PLAN_DAYS-1));
-  $('#dSub').textContent = (i<PLAN_DAYS? 'Plan day '+(i+1)+' · week '+wk+' · phase '+ph.n : 'Overflow day — beyond the 84-day plan')
-    + ' · ' + (sd.hol? 'Holiday' : hhmm(sd.used)+' scheduled of '+hhmm(sd.cap));
+  const wk=Math.floor(i/7)+1, ph=phaseOf(Math.min(i,PHASE4_END));
+  $('#dSub').textContent = (i<PLAN_DAYS? 'Plan day '+(i+1)+' · week '+wk+' · phase '+ph.n : i<=PHASE4_END? 'Portfolio sprint · week '+wk+' · phase 4' : 'Overflow day — beyond the plan')
+    + ' · ' + dayLine(sd);
   const b=$('#dBody'); b.innerHTML='';
 
   const row=el('div','row');
@@ -870,20 +1089,30 @@ function openDay(i, focusId){
   b.appendChild(row);
 
   if(sd.hol){
-    b.appendChild(el('div','review','<b>Holiday.</b> Everything that was scheduled here has been pushed into the next available slots, prerequisites first, respecting the daily time cap. The curriculum order is unchanged.'));
+    b.appendChild(el('div','review','<b>Holiday.</b> Everything that was scheduled here has been pushed into the next available slots, prerequisites first, respecting both daily lanes. The curriculum order is unchanged.'));
+  } else if(sd.buf){
+    b.appendChild(el('div','review','<b>Buffer day.</b> No new material today. Clear backlog first, then revision and career tasks, then a longer project block. If everything is clear, rest.'));
   }
   if(!sd.items.length && !sd.hol) b.appendChild(el('div','empty','Nothing scheduled. Either the plan has not reached this day yet, or you have cleared it.'));
 
-  sd.items.forEach(t=>b.appendChild(detailCard(t,i,focusId===t.id)));
+  const study=sd.items.filter(t=>laneOf(t)==='study'), proj=sd.items.filter(t=>laneOf(t)==='proj');
+  if(study.length){ b.appendChild(el('div','lanehead','<span>Study lane</span><span>'+hhmm(sd.used)+' of '+hhmm(sd.cap)+'</span>')); study.forEach(t=>b.appendChild(detailCard(t,i,focusId===t.id))) }
+  if(proj.length){ b.appendChild(el('div','lanehead','<span>Project lane</span><span>'+hhmm(sd.pused)+' of '+hhmm(sd.pcap)+'</span>')); proj.forEach(t=>b.appendChild(detailCard(t,i,focusId===t.id))) }
 
-  // leisure block
+  // health + leisure block
+  const dw=d.getDay();
   const doneAll = sd.items.length>0 && sd.items.every(t=>stRead(t.id).s==='completed');
-  const gameNight=[3,6,0].indexOf(d.getDay())>-1;
+  const workout=[1,3,5].indexOf(dw)>-1;
+  b.appendChild(el('div','review','<b>Health</b><ul>'+
+    (workout?'<li>Exercise day: 30 minutes (walk, run, gym or sport) — before the study block works best.</li>':'<li>Rest day for exercise. A 20-minute walk still counts.</li>')+
+    '<li>Sleep: at least 7 hours. Pick a fixed lights-out time and count back from your wake-up time.</li>'+
+    '<li>Screen break every 50-60 minutes of study.</li></ul>'));
+  const gameNight=[3,6,0].indexOf(dw)>-1;
   b.appendChild(el('div','review','<b>After 11:30 PM — '+(doneAll?'Valorant unlocked':'Valorant')+'</b><ul><li>'+
     (doneAll? 'Session done. Play guilt-free — this is the reward loop that keeps the other 83 days working.'
-            : 'Finish the block above first, then play. If the session ran long, take the game anyway and push one task to backlog instead of sleeping four hours.')+'</li>'+
-    (gameNight?'<li>Designated long session tonight: two or three competitive games is fine.</li>':'<li>Short night: one unrated or a deathmatch, then stop.</li>')+
-    '<li>Hard rule: no ranked queue before the study block, ever.</li></ul>'));
+            : 'Finish the block above first, then play. If the session ran long, push one task to backlog instead of cutting sleep.')+'</li>'+
+    (gameNight?'<li>Designated long session tonight: two or three competitive games is fine — still inside the 7-hour sleep rule.</li>':'<li>Short night: one unrated or a deathmatch, then stop.</li>')+
+    '<li>Hard rules: no ranked queue before the study block, and gaming never eats into the 7 hours of sleep.</li></ul>'));
 
   // notes
   b.appendChild(el('div','note-lbl','Notes for this day'));
@@ -905,6 +1134,7 @@ function detailCard(t,i,open){
   const box=el('div',''); box.style.flex='1';
   box.appendChild(el('h4',null,esc(t.title)));
   const meta=[hhmm(t.min), t.cat, KINDLABEL[t.kind], 'difficulty '+t.diff+'/5', 'priority '+t.pri];
+  if(t.stretch) meta.push('stretch goal');
   box.appendChild(el('div','meta',meta.join(' · ')));
   head.appendChild(cb); head.appendChild(box);
   card.appendChild(head);
@@ -919,7 +1149,7 @@ function detailCard(t,i,open){
   const mk=(label,fn,on)=>{const x=el('button','btn ghost'+(on?' on':''),label); x.onclick=fn; acts.appendChild(x)};
   mk(s.s==='inprogress'?'In progress':'Start', ()=>{const q=st(t.id); q.s=q.s==='inprogress'?'planned':'inprogress'; q.p=q.s==='inprogress'?i:null; reschedule(); openDay(i,t.id)}, s.s==='inprogress');
   mk('Backlog', ()=>{const q=st(t.id); if(q.s==='backlog'){q.s='planned';q.bk=null}else{q.s='backlog';q.bk=i;q.p=null} reschedule(); openDay(i,t.id); toast('Rescheduled — prerequisites respected')}, s.s==='backlog');
-  mk('Flag shaky', ()=>{const q=st(t.id); q.weak=!q.weak; reschedule(); openDay(i,t.id)}, s.weak);
+  if(t.kind!=='career') mk('Flag shaky', ()=>{const q=st(t.id); q.weak=!q.weak; reschedule(); openDay(i,t.id)}, s.weak);
   card.appendChild(acts);
 
   const nt=el('textarea'); nt.style.marginTop='10px'; nt.value=(state.tasks[t.id]&&state.tasks[t.id].note)||'';
@@ -967,46 +1197,41 @@ function renderScores(){
 }
 
 const PROJECTS=[
- {key:'p1-',name:'PairNest',tag:'developer community · pair programming · project matchmaking · build with friends · startup cofounder circle',
-  pitch:'A developer community where people can find a trusted partner to build, debug, or accelerate a side project. Think of it as a more serious, more useful version of a project matching platform: not just “find a teammate,” but “find the right person for the exact stage of your build.”',
-  detail:'<b>Problem.</b> Most developers want to build something real, but they are stuck alone. They need a teammate for debugging, architecture, launch support, or simply accountability — yet the existing ecosystem is noisy, shallow, and difficult to trust.<br><br>'+
-   '<b>Personas.</b> Students building side projects, early-stage developers wanting a co-builder, indie hackers needing a technical friend, and people who want feedback, accountability, and a serious partner for shipping.<br><br>'+
-   '<b>Product idea.</b> A community marketplace where developers create a profile around their stack, project stage, and working style, then get matched with people for pair programming, reviews, debugging sessions, or side-project collaboration.<br><br>'+
-   '<b>Why it matters.</b> Building alone is slow, frustrating and lonely. A serious community layer around project collaboration gives people momentum, quality, and shared ownership.<br><br>'+
-   '<b>Hard parts worth discussing.</b> Trust and quality control, matching people by actual compatibility instead of just skill tags, preventing low-effort ghost participation, and creating a healthy developer culture rather than a spammy networking app.<br><br>'+
-   '<b>Build story.</b> Start with one feature: project matching and pair sessions, then expand into live rooms, work sessions, technical reviews, community challenges, and founder-style accountability loops.'},
- {key:'p2-',name:'BuildBridge',tag:'startup jobs · projects · dev network · product talent · side project hiring',
-  pitch:'A startup-style talent network for developers who want to join real ideas, not just post their resumes into a black hole. It connects builders with micro-startups, early founders, and small product teams that need technical people for meaningful, fast-moving work.',
-  detail:'<b>Problem.</b> Job boards are too stale and too generic. Real startups, side projects, and small product teams need flexible talent but do not have the time or brand to recruit through traditional hiring channels.<br><br>'+
-   '<b>Personas.</b> Developers looking for meaningful work, early founders needing a build partner, engineers wanting to test startup energy without full-time risk, and product teams trying to hire without a bloated recruitment process.<br><br>'+
-   '<b>Product idea.</b> A marketplace that matches people to startup roles, product teams, and side-project opportunities based on skill, stage, speed, and commitment level — not just title and CV experience.<br><br>'+
-   '<b>Why it matters.</b> People do not just want a job; they want a build environment. This product sits at the intersection of startup discovery, talent matching, and community trust.<br><br>'+
-   '<b>Hard parts worth discussing.</b> Solving trust without a resume-only model, filtering for meaningful projects instead of hype, and giving people enough signal to choose well.<br><br>'+
-   '<b>Build story.</b> Start with founder hiring and project matching, then expand into teams, cohort-based startup sprints, and skill-based trust layers.'},
- {key:'p3-',name:'Signal Atlas',tag:'project discovery · developer learning · build visibility · growth graph · project orbit',
-  pitch:'A developer project discovery system built for people who want to understand what is actually being built, what is growing, and which projects are worth joining or learning from. It is a map of the real builder ecosystem, not just a leaderboard of hype.',
-  detail:'<b>Problem.</b> The online ecosystem is fragmented. Good projects are hidden in Discords, GitHub repos, and personal communities, and serious builders struggle to discover where momentum is actually happening.<br><br>'+
-   '<b>Personas.</b> Developers looking for opportunities, learners wanting to study real projects, small teams needing early talent, and creators trying to build visibility around meaningful work.<br><br>'+
-   '<b>Product idea.</b> A system that tracks active project momentum, technical depth, builder activity, and community engagement so people can discover projects and people with real traction, not just noise.<br><br>'+
-   '<b>Why it matters.</b> People need better signal. A project ecosystem without discovery is just a pile of random repositories and community posts.<br><br>'+
-   '<b>Hard parts worth discussing.</b> Ranking projects by real value instead of vanity metrics, building trust in project quality, and making the platform useful for both builders and learners.<br><br>'+
-   '<b>Build story.</b> Start with project discovery and community activity, then layer in matching, talent discovery, and “who is worth learning from” intelligence.'},
- {key:'p4-',name:'LaunchLoop',tag:'developer feedback · product iteration · QA loops · founder build community · experiments',
-  pitch:'A feedback and validation tool for indie developers and early-stage builders who need fast, quality feedback from the right people before they launch. It brings together testing, structured critique, and community accountability in one loop.',
-  detail:'<b>Problem.</b> Most builders launch too early or too late because they do not have a good way to get useful, targeted feedback. They either get vague comments or silence.<br><br>'+
-   '<b>Personas.</b> Indie hackers, early founders, side project builders, and developers launching small tools or products who need signal before spending more time on polish.<br><br>'+
-   '<b>Product idea.</b> A structured testing environment where builders share a product, get targeted feedback from a relevant community, and iterate through fast feedback loops built around real usage and product questions.<br><br>'+
-   '<b>Why it matters.</b> Good products are built by learning fast. This product makes the learning loop more intentional and less random.<br><br>'+
-   '<b>Hard parts worth discussing.</b> Designing useful feedback prompts, reducing low-quality responses, and turning critiques into concrete product decisions instead of endless opinions.<br><br>'+
-   '<b>Build story.</b> Begin with structured feedback challenges, then expand into validation cohorts, launch testing, and product review communities.'},
- {key:'p5-',name:'CrewDock',tag:'technical collaboration · workrooms · project pods · community sync · remote build teams',
-  pitch:'A collaborative workspace for developer groups who want to build together without the friction of scattered tools. It is not just chat and tasks — it is a team rhythm system for focused project pods and remote build sprints.',
-  detail:'<b>Problem.</b> Small developer teams often run on Discord, Notion, GitHub, and vague status updates. The friction is not just coordination — it is the lack of a shared operating rhythm.<br><br>'+
-   '<b>Personas.</b> Small technical teams, student groups, founder pods, and side-project squads building in public without a formal platform.<br><br>'+
-   '<b>Product idea.</b> Build rooms where a group can coordinate tasks, pair on code, share blockers, and keep their sprint rhythm visible. It blends async communication with a lightweight work session structure.<br><br>'+
-   '<b>Why it matters.</b> Developers do not just need tools; they need a shared system to stay aligned. This product helps small groups act like a real team instead of a collection of separate inboxes.<br><br>'+
-   '<b>Hard parts worth discussing.</b> Keeping rooms lightweight, avoiding task-tool fatigue, and creating a system that helps teams stay focused without turning into a second job.<br><br>'+
-   '<b>Build story.</b> Start with project pods and sprint rooms, then expand into collaborative work sessions, matching, and community-driven build circles.'}
+ {key:'p1-',short:'Palimpsest',name:'Palimpsest',tag:'Flagship · always first on the resume · ~64h in the project lane · Next.js · Node · Postgres+pgvector · Redis · queues · RAG · evals',
+  pitch:'Decision memory for engineering teams. Palimpsest extracts the decisions buried in RFCs, pull requests and design threads into a linked decision graph, answers “why is this the way it is?” with citations back to the exact source, and checks new pull requests against decisions nobody remembers making. Demoed on a real public corpus, so every answer can be verified by clicking through.',
+  detail:'<b>Differentiator.</b> Unblocked, Glean, Sourcegraph Cody, Swimm and CodeRabbit already do search, code Q&amp;A or PR review. Palimpsest treats <i>decisions</i> as first-class entities — decision, rationale, rejected alternatives, author, date, source spans — and checks new PRs against them. That sentence is the answer to “how is this different?”.<br><br>'+
+   '<b>Priority order.</b> (1) Cited Q&amp;A over decisions → (2) golden-set evals with a CI gate → (3) production deploy with a metrics table → (4) contradiction check on PRs → (5) everything else (Python service, MCP server, LangGraph, AWS extras) is a bonus, only after 1-4 ship.<br><br>'+
+   '<b>Data.</b> A real public project whose reasoning lives in its history (Rust RFCs, React RFCs, Kubernetes KEPs or Python PEPs, plus the GitHub PRs and issues that discuss them), fetched by a resumable script with source URLs on every document. A hand-labelled seed set of 20 decisions grows into the 40-question golden set.<br><br>'+
+   '<b>Architecture.</b> Next.js App Router → Node API (controller/service/repository, cookie sessions, workspace-scoped repos) → Postgres + pgvector (documents, chunks, decisions, decision_links) → Redis (cache, rate limits, pub/sub, queue) → workers (parse, chunk, embed, extract, link) → WebSocket progress.<br><br>'+
+   '<b>AI.</b> Hybrid retrieval (full-text + vector, reciprocal rank fusion) with reranking; decision extraction as schema-constrained structured output; an authorisation-checked, iteration-capped tool loop over the decision graph; citations on every claim and abstention when evidence is weak. Contradiction check scoped to explicit decisions only, thresholded for precision over recall.<br><br>'+
+   '<b>Resume numbers to collect.</b> Documents ingested · decisions extracted · extraction precision (30 hand-checked) · recall@k and MRR · faithfulness · abstention accuracy · contradiction precision/recall on 20 labelled PRs · p95 answer latency · cost per answer.<br><br>'+
+   '<b>Hard parts worth talking about.</b> Indirect prompt injection through ingested documents; false positives in the contradiction check; bounded embedding cost via content hashing; tenant isolation at the repository layer; resumable ingestion when a worker dies mid-document.'},
+ {key:'p2-',short:'Hindsight',name:'Hindsight FC',tag:'Football #1 · managers and match decisions · ~25h (MVP in plan, AI layer in the sprint) · streaming ingestion · xT · cohort retrieval · grounded narratives',
+  pitch:'An engineering project that happens to use football data. Hindsight FC streams large open event datasets into Postgres, rebuilds possession chains, implements and extends the expected-threat (xT) model, and scores in-match managerial decisions by the threat they added or removed — with confidence intervals and a limitations section. In the sprint it gains cohort retrieval, grounded narratives and a published audit of a full Premier League or La Liga season.',
+  detail:'<b>How to pitch it.</b> Lead with the engineering: ingestion throughput, resumable checkpoints, COPY bulk loads, precompute-on-write, cache hit rates and p95. Football is the dataset, not the headline.<br><br>'+
+   '<b>Credit and licence.</b> The xT method is Karun Singh’s — “implemented and extended”, never novel. Follow the current StatsBomb open-data licence and attribution terms.<br><br>'+
+   '<b>Honest uncertainty.</b> Similar match states are not a controlled experiment; every delta ships with a confidence band and a minimum sample size, and the README answers “is that causal?” before anyone asks.<br><br>'+
+   '<b>10/10 markers.</b> Convergence unit-tested against a hand-computed grid · validated against published xT grids · narratives rejected automatically if they cite anything not retrieved · a published season audit with an audience.'},
+ {key:'p3-',short:'Doppelgänger',name:'Doppelgänger',tag:'Football #2 · players · Premier League and La Liga · ~23h in the sprint · per-90 profiles · pgvector style search · safe text-to-SQL agent',
+  pitch:'Find players who play like a given player — by where and how they act on the pitch, not just totals — across Premier League and La Liga seasons in the open data, filtered by age, minutes and market value. Ask in plain English (“left-footed centre-backs under 23 in La Liga who progress the ball like X”) and get a cited scouting report.',
+  detail:'<b>Real problem.</b> Replacement and bargain scouting needs a scouting department that most clubs, analysts and fantasy managers do not have.<br><br>'+
+   '<b>Plan coverage.</b> Window functions and materialised views (week 8) · feature pipelines and Python (week 10–11) · pgvector and hybrid filters (week 11) · tool calling, structured output and AI security (weeks 11–12) · caching and load tests (week 9).<br><br>'+
+   '<b>Evaluation.</b> Self-retrieval test: a player’s season N profile must retrieve his season N+1 profile in the top 5 · a 40-query golden set with exact-result scoring for the text-to-SQL agent · injection and schema-probing attempts that must fail.<br><br>'+
+   '<b>Data.</b> Reuses Hindsight’s ingestion. Verify which PL and La Liga seasons the open event data covers and the licence of any market-value dataset before building; attribute both.<br><br>'+
+   '<b>10/10 markers.</b> Explainable similarity (every match shows the features that drove it) · a documented failure case · published scouting piece with community feedback.'},
+ {key:'p4-',short:'Post-Plant',name:'Post-Plant',tag:'Valorant · ~22h in the sprint · rate-limited Riot API client · round-level SQL analytics · grounded AI coach · realtime dashboard',
+  pitch:'Ranked players grind without knowing why they lose rounds. Post-Plant analyses your own post-match data round by round — first deaths by site and side, trade rate, force-buy outcomes, utility use, heatmaps — finds the three habits costing you the most rounds, and turns them into a weekly practice plan with an AI coach whose every claim cites a number.',
+  detail:'<b>Compliance first.</b> Post-match only, nothing that gives an in-match advantage, only data your Riot key and the policies allow, no exposure of other players. The key application is scheduled in week 6 because approval takes time; fixture data from your own matches is the fallback.<br><br>'+
+   '<b>Plan coverage.</b> Token-bucket rate limiting and Redis (week 7) · queues and idempotent ingestion (week 9) · window-function analytics (week 8) · WebSockets (week 7) · tool calling and grounded output (week 11–12).<br><br>'+
+   '<b>Honest statistics.</b> Every metric carries a sample size and confidence interval and is hidden below a minimum sample.<br><br>'+
+   '<b>10/10 markers.</b> 5 friends using it weekly · a 4-week before/after self-experiment with charts · 30 coach claims verified against query results · a fun, honest write-up.'},
+ {key:'p5-',short:'Chitthi',name:'Chitthi',tag:'Unique #2 · real users · ~24h in the sprint · multimodal extraction · on-page citations · Hindi and English · reminders · privacy by design',
+  pitch:'People receive bank, tax, utility, insurance and government letters they cannot fully read. Chitthi turns a phone photo of the letter into a plain-language explanation in Hindi or English — what it is, what it wants, by when and how much — with every claim highlighted on the original page, reminders for deadlines, and a share link for family.',
+  detail:'<b>Safety line.</b> Explains what the letter says; never gives legal or financial advice; says “confirm this with a person” whenever confidence is low.<br><br>'+
+   '<b>Plan coverage.</b> S3 presigned uploads (week 10) · multimodal inputs (week 12) · structured output and grounding (weeks 11–12) · queues and delayed jobs (week 9) · WebSockets (week 7) · OWASP and PII handling (week 7) · prompt injection defence (week 12).<br><br>'+
+   '<b>Evaluation.</b> Field-level precision/recall on 30 real redacted letters · automatic faithfulness checks · native-speaker ratings of clarity on 20 letters · abstention on unreadable inputs · injection test via text inside the image.<br><br>'+
+   '<b>Privacy.</b> Redaction before model calls where possible, encryption at rest, auto-delete after 30 days, no training on user data, written threat model.<br><br>'+
+   '<b>10/10 markers.</b> 5 real users from your own family and neighbourhood · measured task success and time-to-understand with and without Chitthi · a problem interviewers instantly understand.'}
 ];
 let PROJBUILT=false;
 function renderProjects(){
@@ -1015,9 +1240,11 @@ function renderProjects(){
     PROJECTS.forEach((p,n)=>{
       const s=projStats(p.key), box=out.children[n];
       box.querySelector('.bar i').style.width=s.pct+'%';
-      box.querySelector('.mstone').textContent='Milestones ('+s.done+'/'+s.total+' done)';
+      box.querySelector('.mstone').textContent='Milestones ('+s.done+'/'+s.total+' done · '+s.sDone+'/'+s.sTotal+' sessions)';
       Array.prototype.forEach.call(box.querySelectorAll('.tl li'),(li,k)=>{
-        li.className = stRead(s.list[k].id).s==='completed'?'done':'';
+        const t=s.list[k];
+        li.className = stRead(t.id).s==='completed'?'done':'';
+        li.querySelector('span').textContent=fmt(dateFor(SCH.placed[t.id]));
       });
     });
     return;
@@ -1032,19 +1259,16 @@ function renderProjects(){
     box.appendChild(el('div','bar','<i style="width:'+s.pct+'%;background:var(--proj)"></i>'));
     const d=el('details'); d.appendChild(el('summary',null,'Architecture, hard problems and testing strategy'));
     d.appendChild(el('div','inner',p.detail)); box.appendChild(d);
-
-    if (p.key === 'p1-' || p.key === 'p2-') {
-      const d2=el('details'); const sm=el('summary','mstone','Milestones ('+s.done+'/'+s.total+' done)'); d2.appendChild(sm);
-      const ul=el('ul','tl');
-      s.list.forEach(t=>{
-        const done=stRead(t.id).s==='completed';
-        const li=el('li',done?'done':'', '<b>'+esc(t.title.split('— ')[1]||t.title)+'</b><br>'+fmt(dateFor(SCH.placed[t.id])));
-        li.onclick=()=>openDay(SCH.placed[t.id],t.id); li.style.cursor='pointer';
-        ul.appendChild(li);
-      });
-      d2.appendChild(ul); box.appendChild(d2);
-    }
-
+    const d2=el('details'); const sm=el('summary','mstone','Milestones ('+s.done+'/'+s.total+' done · '+s.sDone+'/'+s.sTotal+' sessions)'); d2.appendChild(sm);
+    const ul=el('ul','tl');
+    s.list.forEach(t=>{
+      const done=stRead(t.id).s==='completed';
+      const name=(t.title.split('— ')[1]||t.title).replace(/\s\(\d+\/\d+\)$/,'');
+      const li=el('li',done?'done':'', '<b>'+esc(name)+'</b> · '+t.of+'h<br>done by <span>'+fmt(dateFor(SCH.placed[t.id]))+'</span>');
+      li.onclick=()=>openDay(SCH.placed[t.id],t.id); li.style.cursor='pointer';
+      ul.appendChild(li);
+    });
+    d2.appendChild(ul); box.appendChild(d2);
     out.appendChild(box);
   });
 }
@@ -1085,13 +1309,14 @@ function renderSearch(){
 
 /* ---------- weekly review ---------- */
 function openReview(){
-  const wk=Math.max(0,Math.min(11,Math.floor((selected!=null?selected:Math.min(TODAY,PLAN_DAYS-1))/7)));
+  const wk=Math.max(0,Math.min(Math.floor(PHASE4_END/7),Math.floor((selected!=null?selected:Math.max(0,Math.min(TODAY,PHASE4_END)))/7)));
   const from=wk*7, to=from+6;
   const items=[]; for(let i=from;i<=to;i++) if(SCH.days[i]) SCH.days[i].items.forEach(t=>items.push([t,i]));
   const done=items.filter(x=>stRead(x[0].id).s==='completed');
   const back=items.filter(x=>stRead(x[0].id).s==='backlog');
   const open=items.filter(x=>['planned','inprogress'].indexOf(stRead(x[0].id).s)>-1);
-  const mins=done.reduce((a,x)=>a+x[0].min,0);
+  const mins=done.filter(x=>x[0].kind!=='project').reduce((a,x)=>a+x[0].min,0);
+  const pmins=done.filter(x=>x[0].kind==='project').reduce((a,x)=>a+x[0].min,0);
   const hols=state.hol.filter(h=>h>=from&&h<=to).length;
   const sc=scores();
   const cats={}; items.forEach(x=>{cats[x[0].cat]=cats[x[0].cat]||{d:0,t:0}; cats[x[0].cat].t++; if(stRead(x[0].id).s==='completed')cats[x[0].cat].d++});
@@ -1099,27 +1324,30 @@ function openReview(){
   const weak=SCH.all.filter(t=>stRead(t.id).weak);
   const nextWeek=[]; for(let i=to+1;i<=to+7;i++) if(SCH.days[i]) SCH.days[i].items.forEach(t=>nextWeek.push(t));
   const iv=items.filter(x=>x[0].kind==='interview'); const ivDone=iv.filter(x=>stRead(x[0].id).s==='completed').length;
+  const car=items.filter(x=>x[0].kind==='career'); const carDone=car.filter(x=>stRead(x[0].id).s==='completed').length;
 
   $('#dTitle').textContent='Week '+(wk+1)+' review';
   $('#dSub').textContent=fmt(dateFor(from))+' – '+fmt(dateFor(to))+' · phase '+phaseOf(from).n;
   const b=$('#dBody'); b.innerHTML='';
   const nav=el('div','row');
   const prev=el('button','btn','← Previous week'); prev.onclick=()=>{selected=Math.max(0,from-7); openReview()};
-  const next=el('button','btn','Next week →'); next.onclick=()=>{selected=Math.min(PLAN_DAYS-1,from+7); openReview()};
+  const next=el('button','btn','Next week →'); next.onclick=()=>{selected=Math.min(PHASE4_END,from+7); openReview()};
   nav.appendChild(prev); nav.appendChild(next); b.appendChild(nav);
 
   const sec=(title,html)=>{ const d=el('div','review'); d.style.marginBottom='11px'; d.innerHTML='<b>'+title+'</b>'+html; b.appendChild(d) };
   sec('Throughput','<ul><li>'+done.length+' of '+items.length+' tasks completed ('+(items.length?Math.round(100*done.length/items.length):0)+'%)</li>'+
-    '<li>'+(mins/60).toFixed(1)+' hours logged · '+(items.length?(mins/Math.max(1,7-hols)/60).toFixed(1):0)+'h average per working day</li>'+
+    '<li>'+(mins/60).toFixed(1)+'h study · '+(pmins/60).toFixed(1)+'h project · '+(items.length?((mins+pmins)/Math.max(1,7-hols)/60).toFixed(1):0)+'h average per working day</li>'+
     '<li>'+hols+' holiday'+(hols===1?'':'s')+' taken · '+back.length+' pushed to backlog · '+open.length+' still open</li></ul>');
   sec('Completed', done.length? '<ul>'+done.map(x=>'<li>'+esc(x[0].title)+'</li>').join('')+'</ul>' : '<ul><li>Nothing logged yet for this week.</li></ul>');
   sec('Missed or carried forward', (back.length+open.length)? '<ul>'+back.concat(open).map(x=>'<li>'+esc(x[0].title)+' → now '+fmt(dateFor(SCH.placed[x[0].id]))+'</li>').join('')+'</ul>' : '<ul><li>Clean week. Nothing outstanding.</li></ul>');
   sec('Interview practice', iv.length? '<ul><li>'+ivDone+' of '+iv.length+' interview blocks done</li><li>Interview readiness score: '+(sc.Interview!=null?sc.Interview:0)+'/100</li></ul>' : '<ul><li>No interview block landed in this week.</li></ul>');
+  sec('Career', car.length? '<ul><li>'+carDone+' of '+car.length+' career tasks done</li>'+car.map(x=>'<li>'+esc(x[0].title)+(stRead(x[0].id).s==='completed'?' ✓':'')+'</li>').join('')+'</ul>' : '<ul><li>No career task this week.</li></ul>');
   sec('Strongest this week', ranked.length? '<ul>'+ranked.slice(0,3).map(r=>'<li>'+r[0]+' — '+Math.round(r[1]*100)+'% complete</li>').join('')+'</ul>' : '<ul><li>—</li></ul>');
   sec('Weakest — fix these first', (weak.length? '<ul>'+weak.slice(0,6).map(t=>'<li>'+esc(t.title)+' (flagged shaky · next revision '+fmt(dateFor(SCH.placed[t.id]))+')</li>').join('')+'</ul>'
       : (ranked.length? '<ul>'+ranked.slice(-2).map(r=>'<li>'+r[0]+' — '+Math.round(r[1]*100)+'% complete</li>').join('')+'</ul>':'<ul><li>—</li></ul>')));
-  sec('Projects','<ul>'+PROJECTS.map(p=>{const s=projStats(p.key); return '<li>'+p.name+': '+s.done+'/'+s.total+' milestones ('+s.pct+'%)</li>'}).join('')+'</ul>');
-  sec('Next week — do these in this order', nextWeek.length? '<ul>'+nextWeek.slice(0,7).map(t=>'<li>'+esc(t.title)+'</li>').join('')+'</ul>' : '<ul><li>Plan finished. Switch to mock loops and project polish.</li></ul>');
+  sec('Projects','<ul>'+PROJECTS.map(p=>{const s=projStats(p.key); if(!s.sTotal) return ''; return '<li>'+p.name+': '+s.done+'/'+s.total+' milestones · '+s.sDone+'/'+s.sTotal+' sessions ('+s.pct+'%)</li>'}).join('')+'<li>Shipped a live increment this week? If not, make that the first project session next week.</li></ul>');
+  sec('Health check','<ul><li>Did you average 7+ hours of sleep?</li><li>Did you exercise 3 times?</li><li>If either is no, cut one study task next week before cutting sleep.</li></ul>');
+  sec('Next week — do these in this order', nextWeek.length? '<ul>'+nextWeek.slice(0,8).map(t=>'<li>'+esc(t.title)+'</li>').join('')+'</ul>' : '<ul><li>Plan finished. Switch to mock loops, applications and project polish.</li></ul>');
   $('#drawer').classList.add('on'); $('#scrim').classList.add('on');
 }
 
@@ -1174,13 +1402,216 @@ CATS.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textCon
 
 
 /* ============================================================
-  INITIALIZATION
-  ============================================================ */
-if(TODAY>=0 && TODAY<HORIZON) cursor=dateFor(TODAY);
-renderAll();
-if(!hasLS) toast('Browser storage is blocked here — export progress before refreshing.');
+   LOCK SCREEN
+   ============================================================ */
+const PASSCODE='1432';
+function unlock(){
+  $('#gate').classList.add('off'); $('#app').hidden=false;
+  if(TODAY>=0 && TODAY<HORIZON) cursor=dateFor(TODAY);
+  renderAll();
+  Sync.boot();
+  if(!hasLS) toast('Browser storage is blocked here — progress will not survive a refresh.');
+}
+function tryUnlock(){
+  const v=$('#pw').value.trim();
+  if(v===PASSCODE){ try{localStorage.setItem('ej.open','1')}catch(e){} unlock() }
+  else { $('#pw').classList.add('bad'); $('#pwErr').textContent='Wrong code.'; $('#pw').value=''; setTimeout(()=>$('#pw').classList.remove('bad'),600) }
+}
+$('#pwGo').onclick=tryUnlock;
+$('#pw').addEventListener('keydown',e=>{ if(e.key==='Enter') tryUnlock() });
+let alreadyOpen=false; try{ alreadyOpen=localStorage.getItem('ej.open')==='1' }catch(e){}
+if(alreadyOpen) unlock(); else setTimeout(()=>$('#pw').focus(),60);
 
+/* ============================================================
+   CLOUD SYNC — no server of your own, no account needed.
+   Provider A (default): jsonblob.com, anonymous JSON storage.
+   Provider B: a private GitHub gist (needs a token, most reliable).
+   Payload is AES-GCM encrypted with a key derived from the passcode.
+   ============================================================ */
+const Sync = (function(){
+  const CFGK='ej.sync.v1';
+  let cfg = (function(){ try{ return JSON.parse(localStorage.getItem(CFGK)||'null') }catch(e){ return null } })() || {mode:'off',id:null,token:null};
+  let keyP=null, busy=false, lastPush=0, timer=null;
 
+  function saveCfg(){ try{ localStorage.setItem(CFGK,JSON.stringify(cfg)) }catch(e){} }
+  function status(kind,text){
+    const d=$('#syncDot'), t=$('#syncTxt'); if(!d) return;
+    d.className='syncdot'+(kind?' '+kind:''); t.textContent=text;
+  }
+  const b64=u=>btoa(String.fromCharCode.apply(null,u));
+  const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+  function subtleOK(){ return typeof crypto!=='undefined' && crypto.subtle }
+  function key(){
+    if(!keyP){
+      const enc=new TextEncoder();
+      keyP=crypto.subtle.importKey('raw',enc.encode(PASSCODE),'PBKDF2',false,['deriveKey'])
+        .then(b=>crypto.subtle.deriveKey({name:'PBKDF2',salt:enc.encode('engineering-journey-v1'),iterations:100000,hash:'SHA-256'},b,{name:'AES-GCM',length:256},false,['encrypt','decrypt']));
+    }
+    return keyP;
+  }
+  async function pack(obj){
+    if(!subtleOK()) return {v:0,plain:obj};
+    const iv=crypto.getRandomValues(new Uint8Array(12));
+    const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await key(),new TextEncoder().encode(JSON.stringify(obj)));
+    return {v:1,iv:b64(iv),d:b64(new Uint8Array(ct)),at:obj.updatedAt||0};
+  }
+  async function unpack(box){
+    if(!box) return null;
+    if(box.v===0||box.plain) return box.plain;
+    if(!box.d) return null;
+    if(!subtleOK()) throw new Error('no crypto');
+    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(box.iv)},await key(),unb64(box.d));
+    return JSON.parse(new TextDecoder().decode(pt));
+  }
+
+  /* ---- providers ---- */
+  const JB='https://jsonblob.com/api/jsonBlob';
+  const providers={
+    jsonblob:{
+      async create(body){
+        const r=await fetch(JB,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body)});
+        if(!r.ok) throw new Error('create failed ('+r.status+')');
+        const loc=r.headers.get('X-jsonblob')||r.headers.get('Location')||'';
+        const id=(loc.split('/').pop()||'').trim();
+        if(!id) throw new Error('this browser cannot read the new blob id — use the gist option');
+        return id;
+      },
+      async get(id){ const r=await fetch(JB+'/'+id,{headers:{'Accept':'application/json'}}); if(r.status===404) return null; if(!r.ok) throw new Error('read failed ('+r.status+')'); return r.json() },
+      async put(id,body){ const r=await fetch(JB+'/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!r.ok) throw new Error('write failed ('+r.status+')') }
+    },
+    gist:{
+      hdr(){ return {'Authorization':'token '+cfg.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'} },
+      async create(body){
+        const r=await fetch('https://api.github.com/gists',{method:'POST',headers:this.hdr(),body:JSON.stringify({description:'engineering-journey',public:false,files:{'journey.json':{content:JSON.stringify(body)}}})});
+        if(!r.ok) throw new Error('gist create failed ('+r.status+')');
+        return (await r.json()).id;
+      },
+      async get(id){
+        const r=await fetch('https://api.github.com/gists/'+id,{headers:this.hdr(),cache:'no-store'});
+        if(r.status===404) return null; if(!r.ok) throw new Error('gist read failed ('+r.status+')');
+        const j=await r.json(), f=j.files&&j.files['journey.json']; if(!f) return null;
+        if(f.truncated&&f.raw_url) return (await fetch(f.raw_url)).json();
+        return JSON.parse(f.content);
+      },
+      async put(id,body){
+        const r=await fetch('https://api.github.com/gists/'+id,{method:'PATCH',headers:this.hdr(),body:JSON.stringify({files:{'journey.json':{content:JSON.stringify(body)}}})});
+        if(!r.ok) throw new Error('gist write failed ('+r.status+')');
+      }
+    }
+  };
+  function P(){ return providers[cfg.mode] }
+
+  function stamp(){ state.updatedAt=Date.now(); save(); }
+  function adopt(remote){
+    state=remote; state.hol=state.hol||[]; state.dayNote=state.dayNote||{}; state.tasks=state.tasks||{};
+    saveNow(); reschedule();
+  }
+
+  async function pull(quiet){
+    if(cfg.mode==='off'||!cfg.id) return;
+    busy=true; status('busy','Checking…');
+    try{
+      const box=await P().get(cfg.id);
+      const remote=await unpack(box);
+      if(remote && (remote.updatedAt||0) > (state.updatedAt||0)){ adopt(remote); status('ok','Synced'); if(!quiet) toast('Pulled newer progress from your other device') }
+      else if(remote && (state.updatedAt||0) > (remote.updatedAt||0)){ await push(true) }
+      else status('ok','Synced');
+    }catch(e){ status('err','Offline'); if(!quiet) toast('Sync unavailable: '+e.message) }
+    busy=false;
+  }
+  async function push(quiet){
+    if(cfg.mode==='off'||!cfg.id) return;
+    busy=true; status('busy','Saving…');
+    try{ await P().put(cfg.id, await pack(state)); lastPush=Date.now(); status('ok','Synced'); }
+    catch(e){ status('err','Offline'); if(!quiet) toast('Could not save to the cloud: '+e.message) }
+    busy=false;
+  }
+  function schedulePush(){
+    stamp();
+    if(cfg.mode==='off'||!cfg.id) return;
+    clearTimeout(timer); timer=setTimeout(()=>push(true),1500);
+  }
+  async function connect(mode,token){
+    cfg.mode=mode; cfg.token=token||null;
+    status('busy','Connecting…');
+    stamp();
+    saveNow();
+    cfg.id=await P().create(await pack(state));
+    saveCfg(); setHash(); status('ok','Synced');
+    return cfg.id;
+  }
+  function setHash(){ if(cfg.id&&cfg.mode!=='off'){ try{ history.replaceState(null,'','#'+cfg.mode+':'+cfg.id) }catch(e){} } }
+  function fromHash(){
+    const h=(location.hash||'').replace(/^#/,'');
+    const bits=h.split(':');
+    if(bits.length===2 && (bits[0]==='jsonblob'||bits[0]==='gist') && bits[1]){
+      if(cfg.id!==bits[1]||cfg.mode!==bits[0]){ cfg.mode=bits[0]; cfg.id=bits[1]; saveCfg(); return true }
+    }
+    return false;
+  }
+
+  function boot(){
+    fromHash();
+    if(cfg.mode==='off'||!cfg.id){ status('','Sync off'); return }
+    setHash(); pull(true);
+    window.addEventListener('focus',()=>{ if(!busy && Date.now()-lastPush>4000) pull(true) });
+    setInterval(()=>{ if(!busy && !document.hidden) pull(true) },90000);
+  }
+
+  /* ---- setup dialog in the drawer ---- */
+  function open(){
+    $('#dTitle').textContent='Sync across devices';
+    $('#dSub').textContent = cfg.mode==='off'? 'Not connected — this browser only' : 'Connected via '+cfg.mode+' · id '+cfg.id;
+    const b=$('#dBody'); b.innerHTML='';
+    const box=el('div','setup');
+    box.innerHTML='<div class="review"><b>How this works.</b> GitHub Pages only serves files, so the plan keeps its state in a tiny anonymous JSON store instead. Your progress is encrypted in the browser with a key derived from your passcode before it leaves the page, and the link in your address bar carries the store id — bookmark it and every device opens the same plan.</div>';
+    b.appendChild(box);
+
+    const mk=(title,desc,label,fn)=>{
+      const d=el('div','review'); d.style.marginTop='11px';
+      d.innerHTML='<b>'+title+'</b><div style="font-size:12.5px;margin-top:5px">'+desc+'</div>';
+      const btn=el('button','btn',label); btn.style.marginTop='10px'; btn.onclick=()=>fn(d); d.appendChild(btn); b.appendChild(d); return d;
+    };
+
+    if(cfg.mode==='off'){
+      mk('Option 1 — one click, no account','Creates an anonymous encrypted store on jsonblob.com and links this browser to it.','Turn on sync',async d=>{
+        try{ const id=await connect('jsonblob'); d.innerHTML='<b>Sync is on.</b><div style="font-size:12.5px;margin-top:5px">Store id <code>'+id+'</code>. Open this page on your phone using the full URL in the address bar (it now ends in <code>#jsonblob:'+id+'</code>) and it will load the same progress.</div>'; toast('Sync on') }
+        catch(e){ toast('Could not connect: '+e.message) }
+      });
+      const g=el('div','setup');
+      g.innerHTML='<div class="review" style="margin-top:11px"><b>Option 2 — private GitHub gist</b><div style="font-size:12.5px;margin-top:5px">More reliable and the data stays in your own GitHub account. Create a token at github.com/settings/tokens with only the <code>gist</code> scope, then paste it here. It is stored in this browser only.</div><label>Token</label><input id="ghTok" type="password" placeholder="ghp_…"><label>Existing gist id (leave blank to create one)</label><input id="ghId" placeholder="optional"></div>';
+      b.appendChild(g);
+      const gb=el('button','btn','Connect gist'); gb.style.marginTop='10px';
+      gb.onclick=async ()=>{
+        const t=$('#ghTok').value.trim(), id=$('#ghId').value.trim();
+        if(!t) return toast('Paste a token first');
+        try{
+          if(id){ cfg.mode='gist'; cfg.token=t; cfg.id=id; saveCfg(); setHash(); await pull(); }
+          else { await connect('gist',t); }
+          toast('Gist sync on'); open();
+        }catch(e){ toast('Could not connect: '+e.message) }
+      };
+      b.appendChild(gb);
+    } else {
+      const info=el('div','review'); info.style.marginTop='11px';
+      info.innerHTML='<b>Connected.</b><div style="font-size:12.5px;margin-top:5px">Mode <code>'+cfg.mode+'</code>, id <code>'+cfg.id+'</code>. To add another device, open this exact link there:<br><code style="word-break:break-all">'+esc(location.href)+'</code></div>';
+      b.appendChild(info);
+      const r=el('div','row'); r.style.marginTop='11px';
+      const a1=el('button','btn','Sync now'); a1.onclick=()=>pull();
+      const a2=el('button','btn','Force upload this device'); a2.onclick=()=>{ stamp(); push() };
+      const a3=el('button','btn','Disconnect'); a3.onclick=()=>{ cfg={mode:'off',id:null,token:null}; saveCfg(); status('','Sync off'); try{history.replaceState(null,'',location.pathname)}catch(e){} open() };
+      r.appendChild(a1); r.appendChild(a2); r.appendChild(a3); b.appendChild(r);
+    }
+    $('#drawer').classList.add('on'); $('#scrim').classList.add('on');
+  }
+
+  return {boot,open,schedulePush,pull,push,status:()=>cfg.mode};
+})();
+$('#btnSync').onclick=()=>Sync.open();
+
+/* every local change also queues a cloud write */
+const _resched=reschedule;
+reschedule=function(){ _resched(); Sync.schedulePush() };
 </script>
 </body>
 </html>
